@@ -13,6 +13,18 @@ export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const [registerData, setRegisterData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  
+  const [resetEmail, setResetEmail] = useState('');
+  
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -26,6 +38,90 @@ export const Login: React.FC = () => {
       navigate(redirectPath);
     } else {
       setError('Invalid email or password');
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    
+    if (registerData.password !== registerData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
+    if (registerData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const nameParts = registerData.fullName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
+      const response = await fetch('/api/v1/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: registerData.email,
+          password: registerData.password,
+          firstName,
+          lastName
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        const redirectPath = authService.getRedirectPath(data.user.role);
+        navigate(redirectPath);
+      } else {
+        setError(data.error || 'Registration failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    
+    try {
+      const response = await fetch('/api/v1/auth/password-reset/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: resetEmail })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSuccess('If an account exists with this email, you will receive password reset instructions.');
+        setResetEmail('');
+      } else {
+        setError(data.error || 'Failed to send reset link');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,11 +242,14 @@ export const Login: React.FC = () => {
 
           {/* Register Form */}
           {activeTab === 'register' && (
-            <form onSubmit={(e) => e.preventDefault()}>
+            <form onSubmit={handleRegister}>
               <FormField label="Full Name" required>
                 <Input
                   type="text"
                   placeholder="Enter your full name"
+                  value={registerData.fullName}
+                  onChange={(e) => setRegisterData({ ...registerData, fullName: e.target.value })}
+                  required
                   className="bg-gray-50 border-gray-200 focus:border-[#43b65d] focus:ring-[#43b65d] focus:ring-2"
                 />
               </FormField>
@@ -159,6 +258,9 @@ export const Login: React.FC = () => {
                 <Input
                   type="email"
                   placeholder="Enter your email"
+                  value={registerData.email}
+                  onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                  required
                   className="bg-gray-50 border-gray-200 focus:border-[#43b65d] focus:ring-[#43b65d] focus:ring-2"
                 />
               </FormField>
@@ -166,7 +268,10 @@ export const Login: React.FC = () => {
               <FormField label="Password" required>
                 <Input
                   type="password"
-                  placeholder="Create a password"
+                  placeholder="Create a password (min 8 characters)"
+                  value={registerData.password}
+                  onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                  required
                   className="bg-gray-50 border-gray-200 focus:border-[#43b65d] focus:ring-[#43b65d] focus:ring-2"
                 />
               </FormField>
@@ -175,29 +280,39 @@ export const Login: React.FC = () => {
                 <Input
                   type="password"
                   placeholder="Confirm your password"
+                  value={registerData.confirmPassword}
+                  onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                  required
                   className="bg-gray-50 border-gray-200 focus:border-[#43b65d] focus:ring-[#43b65d] focus:ring-2"
                 />
               </FormField>
 
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
               <Button 
                 type="submit" 
                 className="w-full bg-[#3c65f5] hover:bg-[#2d4ec7] focus:ring-[#43b65d] focus:ring-2 focus:ring-offset-2 transition-all duration-200"
-                disabled
+                disabled={loading}
               >
-                Create Account
+                {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
-              
-              <p className="text-xs text-gray-500 text-center mt-4">Registration feature coming soon</p>
             </form>
           )}
 
           {/* Reset Password Form */}
           {activeTab === 'reset' && (
-            <form onSubmit={(e) => e.preventDefault()}>
+            <form onSubmit={handlePasswordReset}>
               <FormField label="Email Address" required>
                 <Input
                   type="email"
                   placeholder="Enter your email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
                   className="bg-gray-50 border-gray-200 focus:border-[#43b65d] focus:ring-[#43b65d] focus:ring-2"
                 />
               </FormField>
@@ -206,15 +321,25 @@ export const Login: React.FC = () => {
                 We'll send you a link to reset your password to the email address associated with your account.
               </p>
 
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
+              {success && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-600">{success}</p>
+                </div>
+              )}
+
               <Button 
                 type="submit" 
                 className="w-full bg-[#3c65f5] hover:bg-[#2d4ec7] focus:ring-[#43b65d] focus:ring-2 focus:ring-offset-2 transition-all duration-200"
-                disabled
+                disabled={loading}
               >
-                Send Reset Link
+                {loading ? 'Sending...' : 'Send Reset Link'}
               </Button>
-              
-              <p className="text-xs text-gray-500 text-center mt-4">Password reset feature coming soon</p>
             </form>
           )}
         </Card>
