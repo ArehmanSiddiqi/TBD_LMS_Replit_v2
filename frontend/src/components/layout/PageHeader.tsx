@@ -37,9 +37,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ currentUser }) => {
                 Courses
               </Link>
               {showManagerFeatures && (
-                <Link to="/team" className="text-gray-600 hover:text-gray-900 font-medium">
-                  My Team
-                </Link>
+                <>
+                  <Link to="/team" className="text-gray-600 hover:text-gray-900 font-medium">
+                    My Team
+                  </Link>
+                  <Link to="/employees" className="text-gray-600 hover:text-gray-900 font-medium">
+                    Employees
+                  </Link>
+                </>
               )}
               <Link to={`/${currentUser?.role.toLowerCase()}`} className="text-gray-600 hover:text-gray-900 font-medium">
                 Dashboard

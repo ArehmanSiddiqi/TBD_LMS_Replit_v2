@@ -8,7 +8,8 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { CourseView } from './pages/CourseView';
 import { CreateNewCourse } from './pages/CreateNewCourse';
 import { CoursesList } from './pages/CoursesList';
-import { TeamPage } from './pages/TeamPage';
+import { MyTeamPage } from './pages/MyTeamPage';
+import { EmployeeManagementPage } from './pages/EmployeeManagementPage';
 
 function App() {
   const currentUser = authService.getCurrentUser();
@@ -81,7 +82,16 @@ function App() {
           path="/team"
           element={
             <RequireRole allowedRoles={['MANAGER', 'ADMIN']}>
-              <TeamPage />
+              <MyTeamPage />
+            </RequireRole>
+          }
+        />
+        
+        <Route
+          path="/employees"
+          element={
+            <RequireRole allowedRoles={['MANAGER', 'ADMIN']}>
+              <EmployeeManagementPage />
             </RequireRole>
           }
         />
