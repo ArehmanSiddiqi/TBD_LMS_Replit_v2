@@ -1,0 +1,60 @@
+Design the Admin Dashboard experience and related screens while keeping all existing pages, layouts, and navigation consistent and interconnected across the platform (Login, Manager, Employee, Course pages, etc.). The Admin role should have an elevated view and approval actions focused on platform health and course management.
+
+1. Admin Dashboard Overview Page
+The main dashboard should present a high-level snapshot of the platform with clear, data-rich cards and tables.
+Top section:
+
+Total Assigned → shows total course assignments (e.g. “8”)
+
+Started → shows how many courses are currently in progress (e.g. “5”)
+
+Completed → shows how many courses have been completed (e.g. “3”)
+
+Active (7d) → shows active users in the past week (e.g. “8”)
+
+Below metrics, include:
+
+All Courses Table → lists all courses currently on the platform with title, creator name, and status badge (“Published” in green, “Draft” in gray).
+
+Each course row includes a small “Approve” button for drafts, which opens a modal.
+
+Inactive Users Card → shows users with no activity in 30+ days (if none, display “All users are active! 🎉”).
+
+Platform Insights Section → shows completion rate (“38%”), active courses (“3”), and total users (“8”).
+
+2. Course Approval Flow
+When the admin clicks “Approve” on a draft course:
+
+Open a modal titled “Approve Course for Publishing.”
+
+Show course details: title, description, created by, and manager’s note.
+
+Buttons: Approve & Publish (primary), Reject with Note (opens small text box), and Cancel.
+
+On approval, the course status visually updates to “Published” and moves up in the dashboard’s “Active Courses” count.
+
+On rejection, show a visual badge “Needs Revision” next to the course.
+
+3. Admin Course List Page (“Courses” tab)
+When Admin clicks “Courses” in the top nav, open a full page showing all courses (similar grid view as Manager, but with an additional column for approval status).
+
+Each course card includes: title, thumbnail, description, and two buttons: View (preview course detail) and Publish/Approve (if in draft).
+
+Published courses show a green badge; drafts show gray.
+
+4. User Experience Enhancements
+
+The admin should be able to filter by Status (Draft, Published, Needs Revision).
+
+Hovering over course names shows a quick tooltip with last updated date and creator.
+
+Search bar filters instantly across all courses.
+
+Use subtle success animations when approving or rejecting.
+
+Maintain a consistent header with navigation links and “Create Course” button for Admins too.
+
+5. Purpose of this flow:
+This experience ensures Admins can quickly review manager-created drafts, monitor employee engagement, and maintain an overview of learning platform performance without backend dependencies for now (static data placeholders are fine).
+
+Keep transitions consistent with earlier screens and maintain pixel-perfect alignment with the Figma visuals.

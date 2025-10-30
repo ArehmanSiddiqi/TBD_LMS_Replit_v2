@@ -8,6 +8,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { CourseView } from './pages/CourseView';
 import { CreateNewCourse } from './pages/CreateNewCourse';
 import { CoursesList } from './pages/CoursesList';
+import { AdminCoursesPage } from './pages/AdminCoursesPage';
 import { MyTeamPage } from './pages/MyTeamPage';
 import { EmployeeManagementPage } from './pages/EmployeeManagementPage';
 
@@ -55,7 +56,7 @@ function App() {
           path="/courses"
           element={
             <RequireRole>
-              <CoursesList />
+              {currentUser?.role === 'ADMIN' ? <AdminCoursesPage /> : <CoursesList />}
             </RequireRole>
           }
         />
