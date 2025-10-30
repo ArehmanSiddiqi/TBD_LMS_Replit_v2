@@ -113,7 +113,6 @@ def register(request):
     password = request.data.get('password')
     first_name = request.data.get('firstName', '')
     last_name = request.data.get('lastName', '')
-    role = request.data.get('role', 'EMPLOYEE')
     
     if not email or not password:
         return Response(
@@ -133,17 +132,13 @@ def register(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    valid_roles = [choice[0] for choice in User.ROLE_CHOICES]
-    if role not in valid_roles:
-        role = 'EMPLOYEE'
-    
     try:
         user = User.objects.create_user(
             email=email,
             password=password,
             first_name=first_name,
             last_name=last_name,
-            role=role
+            role='EMPLOYEE'
         )
         
         access_token = create_access_token(user)
@@ -180,33 +175,24 @@ def request_password_reset(request):
     
     user = User.objects.filter(email=email).first()
     
-    if not user:
-        return Response(
-            {'message': 'If the email exists, a password reset link has been sent'},
-            status=status.HTTP_200_OK
+    if user:
+        PasswordResetToken.objects.filter(
+            user=user,
+            is_used=False,
+            expires_at__gt=timezone.now()
+        ).update(is_used=True)
+        
+        token = secrets.token_urlsafe(32)
+        expires_at = timezone.now() + timedelta(hours=1)
+        
+        PasswordResetToken.objects.create(
+            user=user,
+            token=token,
+            expires_at=expires_at
         )
     
-    PasswordResetToken.objects.filter(
-        user=user,
-        is_used=False,
-        expires_at__gt=timezone.now()
-    ).update(is_used=True)
-    
-    token = secrets.token_urlsafe(32)
-    expires_at = timezone.now() + timedelta(hours=1)
-    
-    PasswordResetToken.objects.create(
-        user=user,
-        token=token,
-        expires_at=expires_at
-    )
-    
-    reset_link = f"/reset-password?token={token}"
-    
     return Response({
-        'message': 'If the email exists, a password reset link has been sent',
-        'resetLink': reset_link,
-        'token': token
+        'message': 'If the email exists, a password reset link has been sent'
     })
 
 
