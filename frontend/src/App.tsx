@@ -1,15 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { authService } from './auth/authService';
 import { RequireRole } from './routes/RequireRole';
+import { CoursesRouter } from './routes/CoursesRouter';
 import { Login } from './pages/Login';
 import { EmployeeDashboard } from './pages/EmployeeDashboard';
 import { ManagerDashboard } from './pages/ManagerDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { CourseView } from './pages/CourseView';
 import { CreateNewCourse } from './pages/CreateNewCourse';
-import { EmployeeCoursesPage } from './pages/EmployeeCoursesPage';
-import { ManagerCoursesPage } from './pages/ManagerCoursesPage';
-import { AdminCoursesPage } from './pages/AdminCoursesPage';
 import { MyTeamPage } from './pages/MyTeamPage';
 import { EmployeeManagementPage } from './pages/EmployeeManagementPage';
 
@@ -57,13 +55,7 @@ function App() {
           path="/courses"
           element={
             <RequireRole>
-              {currentUser?.role === 'ADMIN' ? (
-                <AdminCoursesPage />
-              ) : currentUser?.role === 'MANAGER' ? (
-                <ManagerCoursesPage currentUser={currentUser} />
-              ) : (
-                <EmployeeCoursesPage currentUser={currentUser} />
-              )}
+              <CoursesRouter />
             </RequireRole>
           }
         />
