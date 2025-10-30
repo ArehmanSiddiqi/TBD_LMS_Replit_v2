@@ -48,12 +48,13 @@ Preferred communication style: Simple, everyday language.
 - Protected routes requiring authentication: all other routes
 - Role-specific routes with automatic redirects based on user permissions
 - Three main dashboard routes: `/employee`, `/manager`, `/admin`
-- Shared routes: `/courses`, `/courses/:id`, `/team`, `/create-course`
+- Role-based `/courses` route: conditionally renders EmployeeCoursesPage, ManagerCoursesPage, or AdminCoursesPage based on user role
+- Shared routes: `/courses/:id`, `/team`, `/create-course`
 
 **Navigation Structure**
-- Employees: Access to personal courses and progress tracking
-- Managers: Additional access to team management, employee management, and course creation
-- Admins: Full system access including course approval workflows, platform analytics, and system-wide metrics
+- Employees: Access to personal courses and progress tracking - learner-focused experience
+- Managers: Additional access to team management, employee management, and course creation - creator/assigner experience
+- Admins: Full system access including course approval workflows, platform analytics, and system-wide metrics - reviewer/publisher experience
 
 ### Component Architecture
 
@@ -116,6 +117,38 @@ Preferred communication style: Simple, everyday language.
 - Hover tooltips using CSS group-hover patterns
 - Reusable status badge rendering
 - Consistent with existing design system (Button, Card, Input, Modal)
+
+### Role-Based Courses Experience
+
+**Employee Courses Page (EmployeeCoursesPage)**
+- "My Courses" header with search functionality
+- Learner-focused experience with personal progress tracking
+- Learning status badges: Completed (green), In Progress (blue), Not Started (gray)
+- Progress bars for in-progress courses (0-100%)
+- Action buttons adapt to course state: "Start Course", "Continue", or "Review"
+- Hover tooltips showing "Assigned by [Manager Name]"
+- No create, assign, approve, or administrative actions visible
+- Grid layout with course thumbnails, titles, descriptions, duration, and level
+
+**Manager Courses Page (ManagerCoursesPage)**
+- "My Courses" header with prominent "Create Course" button
+- Search bar + status filter dropdown (All/Published/Draft/Awaiting Approval/Needs Revision)
+- Course creator and team assigner experience
+- Status badges: Published (green), Draft (gray), Awaiting Approval (yellow), Needs Revision (red)
+- All courses show View + Assign buttons (always visible)
+- Draft courses: Additional Edit button and disabled Publish button with "Pending Admin Approval" tooltip
+- Awaiting Approval courses: Yellow info box explaining admin review status
+- Published courses: Additional "Assign to Team" button for quick team assignment
+- Course metadata shown: Creator, Level, Duration
+- Grid layout consistent with employee and admin views
+
+**Design Consistency**
+- All three role views use the same grid layout, typography, and hover interactions
+- Shared Card and Button components maintain visual unity
+- Role-based visibility: buttons, badges, and tooltips differ per role
+- Smooth transitions between different course states
+- Mobile-responsive grid (1 column mobile, 2 columns tablet, 3 columns desktop)
+- Consistent empty states when no courses match search/filter criteria
 
 ### Development Configuration
 
