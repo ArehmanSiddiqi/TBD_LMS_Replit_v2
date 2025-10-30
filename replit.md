@@ -198,16 +198,139 @@ Preferred communication style: Simple, everyday language.
 - `eslint-plugin-react-refresh` (^0.4.22) - React refresh linting
 - `globals` (^16.4.0) - Global variables definitions
 
-### Future Integration Points
+## Backend Architecture (NEW - Django REST API)
 
-**Potential Backend Services** (not currently implemented)
-- REST API or GraphQL endpoint for course data
-- Authentication service (JWT, OAuth, or session-based)
-- Database for persistent storage (candidates: PostgreSQL, MongoDB)
-- File storage service for course videos and thumbnails
-- Analytics service for tracking user progress and engagement
+### Overview
+Full Django 5 + Django REST Framework backend with JWT authentication, role-based permissions, and Supabase PostgreSQL database.
 
-**Third-Party Services** (currently using placeholders)
-- Video hosting (YouTube embeds in mock data, could integrate Vimeo, Wistia, or custom solution)
-- Image CDN for course thumbnails (currently using Unsplash URLs)
-- Email service for notifications (not implemented)
+**Status**: ✅ Complete and running on port 8000. All endpoints secured with JWT authentication.
+
+### Technology Stack
+
+- **Django 5.1.4** - Python web framework
+- **Django REST Framework 3.15.2** - RESTful API toolkit
+- **PostgreSQL (Supabase)** - Production database with connection pooling
+- **PyJWT 2.10.1** - JWT token generation and validation
+- **psycopg 3.2.3** - PostgreSQL adapter for Python
+- **django-cors-headers 4.6.0** - CORS support for React frontend
+
+### Authentication System
+
+**JWT-Based Authentication**
+- Custom `JWTAuthentication` class validates Bearer tokens
+- Access tokens: 1 hour lifetime (signed with JWT_ACCESS_SECRET)
+- Refresh tokens: 7 day lifetime (signed with JWT_REFRESH_SECRET)
+- Refresh token blacklist for logout functionality
+- Timezone-aware token generation using UTC
+
+**Endpoints:**
+- `POST /api/v1/auth/login` - Email/password login, returns JWT tokens
+- `POST /api/v1/auth/refresh` - Refresh access token
+- `POST /api/v1/auth/logout` - Blacklist refresh token
+
+### Authorization & Permissions
+
+**Permission Classes:**
+- `IsAuthenticated` - Requires valid JWT token
+- `IsAdmin` - Admin role only
+- `IsManagerOrAdmin` - Manager, TL, SRMGR, or Admin roles
+- `IsOwnerOrAdmin` - Resource owner or Admin
+
+**Protected Resources:**
+- All ModelViewSets require authentication by default
+- User & Team management: Manager+ roles only
+- Course approvals: Manager+ roles only
+- Assignments, Progress, Notifications: Owner or Admin
+
+**Public Endpoints:**
+- `/api/v1/auth/*` - Authentication endpoints
+- `/api/v1/health/db` - Database health check
+
+### Database Models
+
+**User Model (Custom AbstractBaseUser)**
+- Email as username (unique)
+- Role: ADMIN | MANAGER | TL | SRMGR | EMPLOYEE
+- Optional team assignment
+- Custom UserManager for email-based user creation
+- Django admin integration
+
+**Core LMS Models:**
+- **Team**: Name, description, manager, members
+- **Course**: Title, description, video_url, thumbnail_url, status, level, created_by
+- **Resource**: Course materials (Google Docs/Slides/PDF links)
+- **Assignment**: User-course relationship with progress tracking
+- **ProgressEvent**: Historical progress records
+- **Notification**: User notifications with read tracking
+- **Approval**: Course approval workflow (requested_by, approved_by, status)
+- **RefreshToken**: JWT refresh token storage with blacklist
+
+**Database Configuration:**
+- Supabase PostgreSQL with automatic URL password encoding
+- Connection pooling (600s max age)
+- Automatic migrations on startup via workflow
+- SQLite explicitly blocked via preflight checks
+
+### API Endpoints
+
+**Base URL:** `http://localhost:8000/api/v1/`
+
+**Resource Endpoints** (all require authentication):
+- `/users/` - User management (Manager+ only)
+- `/teams/` - Team management (Manager+ only)
+- `/courses/` - Course CRUD operations
+- `/resources/` - Course resource links
+- `/assignments/` - Course assignments
+- `/progress-events/` - Progress history
+- `/notifications/` - User notifications
+- `/approvals/` - Course approval workflow (Manager+ only)
+
+All endpoints support standard REST operations (GET, POST, PUT, PATCH, DELETE).
+
+### Security Features
+
+✅ **Implemented:**
+- JWT authentication with separate access/refresh secrets
+- Token blacklisting for logout
+- Role-based access control
+- Password hashing via Django's auth system
+- CORS configuration for frontend integration
+- SQL injection protection via Django ORM
+- Environment-based secrets management
+
+⚠️ **Production Considerations:**
+- Set `DEBUG = False`
+- Configure specific `ALLOWED_HOSTS`
+- Restrict CORS to frontend domain only
+- Use HTTPS for all connections
+- Implement rate limiting on auth endpoints
+- Regular security updates for dependencies
+
+### Management Commands
+
+**`python manage.py seed_demo`**
+Creates demo data for testing:
+- 3 users (admin, manager, employee)
+- 3 teams
+- 6 sample courses
+- 3 course assignments
+
+**Credentials:**
+- Admin: `admin@company.com` / `admin123`
+- Manager: `manager@company.com` / `manager123`
+- Employee: `employee@company.com` / `employee123`
+
+### Third-Party Services
+
+**Video Hosting**
+- YouTube embeds for course videos
+- Could integrate Vimeo, Wistia, or custom solution
+
+**Image CDN**
+- Unsplash URLs for course thumbnails
+- Could migrate to Cloudinary, imgix, or S3
+
+**Future Enhancements**
+- Email service for notifications (SendGrid, Mailgun)
+- Analytics tracking (Mixpanel, Amplitude)
+- File uploads for resources (AWS S3, Cloudflare R2)
