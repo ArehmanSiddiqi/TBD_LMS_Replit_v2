@@ -14,8 +14,11 @@ router.register(r'approvals', views.ApprovalViewSet)
 
 urlpatterns = [
     path('auth/login', views.login, name='login'),
+    path('auth/register', views.register, name='register'),
     path('auth/refresh', views.refresh, name='refresh'),
     path('auth/logout', views.logout, name='logout'),
+    path('auth/password-reset/request', views.request_password_reset, name='request_password_reset'),
+    path('auth/password-reset/confirm', views.reset_password, name='reset_password'),
     path('health/db', views.health_db, name='health_db'),
     path('', include(router.urls)),
 ]
