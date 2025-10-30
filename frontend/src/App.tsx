@@ -57,9 +57,13 @@ function App() {
           path="/courses"
           element={
             <RequireRole>
-              {currentUser?.role === 'ADMIN' && <AdminCoursesPage />}
-              {currentUser?.role === 'MANAGER' && <ManagerCoursesPage currentUser={currentUser} />}
-              {currentUser?.role === 'EMPLOYEE' && <EmployeeCoursesPage currentUser={currentUser} />}
+              {currentUser?.role === 'ADMIN' ? (
+                <AdminCoursesPage />
+              ) : currentUser?.role === 'MANAGER' ? (
+                <ManagerCoursesPage currentUser={currentUser} />
+              ) : (
+                <EmployeeCoursesPage currentUser={currentUser} />
+              )}
             </RequireRole>
           }
         />
