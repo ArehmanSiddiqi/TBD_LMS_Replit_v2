@@ -1,4 +1,4 @@
-import { DashboardStats } from '../types';
+import type { DashboardStats } from '../types';
 
 export const mockManagerStats: DashboardStats = {
   totalCourses: 12,

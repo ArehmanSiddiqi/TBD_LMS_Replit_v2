@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { authService } from '../auth/authService';
-import { UserRole } from '../types';
+import type { UserRole } from '../types';
 
 interface RequireRoleProps {
   allowedRoles?: UserRole[];

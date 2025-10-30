@@ -1,4 +1,4 @@
-import { CourseDetail } from '../types';
+import type { CourseDetail } from '../types';
 
 export const getCourseDetail = (id: string): CourseDetail | null => {
   const courses: Record<string, CourseDetail> = {

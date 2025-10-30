@@ -1,4 +1,4 @@
-import { User, UserRole } from '../types';
+import type { User, UserRole } from '../types';
 
 interface Credentials {
   email: string;
