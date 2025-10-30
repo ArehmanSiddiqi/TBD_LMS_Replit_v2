@@ -1,0 +1,80 @@
+Redesign the Courses Page experience to be role-based — each role (Employee, Manager, Admin) should see and interact with courses differently while keeping navigation and styling consistent with the rest of the platform.
+
+🧑‍🎓 Employee View (Learner Experience)
+
+Purpose: The employee can browse assigned or available courses and continue learning.
+Layout and behavior:
+
+Header: “My Courses” with search bar.
+
+Display course cards in a clean grid with thumbnail, title, short description, and progress bar.
+
+Buttons:
+
+View (opens Course View page).
+
+Continue (if in progress) or Start Course (if not started).
+
+Badges: “Completed,” “In Progress,” or “Not Started.”
+
+No Create, Assign, Publish, or Approve actions visible.
+
+Tooltip under each card: “Assigned by [Manager Name].”
+
+👩‍💼 Manager View (Course Creator & Assigner Experience)
+
+Purpose: The manager can create new courses and assign them to their team but cannot publish or approve them.
+Layout and behavior:
+
+Header: “My Courses” with “Create Course” button on the right.
+
+Course cards include: thumbnail, title, description, creator, and status badge (“Draft,” “Awaiting Approval,” “Published”).
+
+Buttons:
+
+View (preview course).
+
+Assign (opens Assign modal to choose employees).
+
+Edit (only for drafts).
+
+If a course is in Draft, show a gray “Draft” badge and a disabled Publish button with tooltip “Pending Admin Approval.”
+
+If Published, show green “Published” badge and disable editing.
+
+If Awaiting Approval, show yellow badge “Awaiting Admin Review.”
+
+👨‍💼 Admin View (Reviewer & Publisher Experience)
+
+Purpose: The admin can review manager drafts, approve and publish them, and view platform-wide course data.
+Layout and behavior:
+
+Header: “All Courses” with filters by status: Draft / Awaiting Approval / Published.
+
+Each course card shows thumbnail, title, creator, and metadata (level, updated date).
+
+Buttons:
+
+View (preview course).
+
+Approve & Publish (active only for draft or awaiting approval courses).
+
+Reject (opens modal to leave feedback).
+
+Published courses show green “Published” badge.
+
+Rejected ones show red “Needs Revision.”
+
+Optionally include a small “Created by [Manager]” label to trace ownership.
+
+🔁 Experience Consistency
+
+Keep the same grid, typography, and hover interactions for all roles.
+
+Role-based visibility: buttons, badges, and tooltips differ per role.
+
+Maintain visual unity across all pages so switching roles feels cohesive, not like separate apps.
+
+When the backend is later added, visibility and access control will connect directly to each user’s role.
+
+This ensures that Employees learn, Managers create and assign, and Admins review and publish — giving each a clear, frictionless experience within the same platform.

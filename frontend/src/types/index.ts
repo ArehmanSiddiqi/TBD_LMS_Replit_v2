@@ -11,6 +11,9 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
+export type CourseStatus = 'draft' | 'published' | 'awaiting_approval' | 'needs_revision';
+export type LearningStatus = 'not_started' | 'in_progress' | 'completed';
+
 export interface Course {
   id: string;
   title: string;
@@ -21,6 +24,10 @@ export interface Course {
   createdBy: string;
   status: 'draft' | 'published';
   progress?: number;
+  assignedBy?: string;
+  level?: string;
+  courseStatus?: CourseStatus;
+  learningStatus?: LearningStatus;
 }
 
 export interface CourseDetail extends Course {
