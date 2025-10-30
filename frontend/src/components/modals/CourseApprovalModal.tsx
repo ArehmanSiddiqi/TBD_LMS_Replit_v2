@@ -28,11 +28,13 @@ export const CourseApprovalModal: React.FC<CourseApprovalModalProps> = ({
   };
 
   const handleReject = () => {
-    if (rejectionNote.trim()) {
-      onReject(rejectionNote);
-      setShowRejectBox(false);
-      setRejectionNote('');
+    if (!rejectionNote.trim()) {
+      alert('Please provide a rejection note for the manager.');
+      return;
     }
+    onReject(rejectionNote);
+    setShowRejectBox(false);
+    setRejectionNote('');
   };
 
   const handleClose = () => {
