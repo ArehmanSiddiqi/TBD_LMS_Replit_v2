@@ -1,0 +1,48 @@
+Add these Manager-side experiences to the platform while keeping every previous page functional and linked (Login, Dashboards, Course View/Create, Employee pages). Focus on user experience and flow, not backend logic.
+
+1. Manager “My Team” Page
+Shows all team members in clean cards, each with name, role, and progress summary (“2 assigned”, “1 completed”).
+Every card includes three actions:
+
+Assign → opens the “Assign Course” modal.
+
+Progress → opens a detailed view (placeholder for now).
+
+View Profile → opens that employee’s summary (placeholder).
+At the top-right, show a button “Add Team Member”. Searching in the bar filters the visible list live.
+
+2. “Assign Course” Modal
+Triggered from any Assign button.
+Title: “Assign Course to Employees.”
+Subtitle: “Select employees to assign this course to.”
+Show the selected course title.
+List all employees with avatar initials, name, and role.
+Already assigned employees show a light tag “Already assigned.”
+Each entry has a checkbox; selecting updates a live count at the bottom (“3 employee(s) selected”).
+Bottom buttons: primary Assign to X Employee(s) (disabled if 0 selected), secondary Cancel (closes modal).
+
+3. Manager “Employee Management” Page
+Header: “Employee Management” and subtitle “View all employees and send invitations.”
+Search bar filters employees.
+Each employee card shows avatar initials, name, role, and three small badges to the right — “2 assigned,” “1 in progress,” “1 completed.”
+Top-right button: Invite Employee, which opens the invite modal below.
+
+4. “Invite Employee” Modal
+Title: “Invite Employee.”
+Subtitle: “Send an invitation to join the Taleemabad University L&D platform.”
+Fields: Full Name, Email Address.
+Buttons: primary Send Invitation (no logic yet, just feedback placeholder), secondary Cancel.
+
+Behavior summary
+
+Assign and Invite modals appear centered with blurred overlay and close on outside click or X.
+
+All lists and counts use static dummy data.
+
+Search filters update lists immediately (visual only).
+
+Buttons, badges, and colors follow the Figma’s look.
+
+Navigation must let a manager move between Dashboard → Courses → My Team → Employees without losing state or layout consistency.
+
+Ensure all hover, focus, and modal transitions feel smooth and consistent across the platform.
