@@ -1,0 +1,48 @@
+import { Course } from '../types';
+
+export const mockCourses: Course[] = [
+  {
+    id: '1',
+    title: 'Introduction to Data Analysis',
+    description: 'Learn the fundamentals of data analysis and interpretation.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    duration: '2h 30m',
+    createdBy: 'Dr. Sarah Johnson',
+    status: 'published',
+    progress: 45,
+  },
+  {
+    id: '2',
+    title: 'Advanced JavaScript Patterns',
+    description: 'Master modern JavaScript design patterns and best practices.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    duration: '3h 15m',
+    createdBy: 'Mike Chen',
+    status: 'published',
+    progress: 0,
+  },
+  {
+    id: '3',
+    title: 'UI/UX Design Fundamentals',
+    description: 'Create beautiful and user-friendly interfaces.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    duration: '4h 00m',
+    createdBy: 'Emily Davis',
+    status: 'published',
+    progress: 100,
+  },
+  {
+    id: '4',
+    title: 'Python for Beginners',
+    description: 'Start your programming journey with Python.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    duration: '5h 20m',
+    createdBy: 'Alex Kumar',
+    status: 'published',
+    progress: 25,
+  },
+];

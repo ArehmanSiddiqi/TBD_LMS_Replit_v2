@@ -1,0 +1,87 @@
+import { CourseDetail } from '../types';
+
+export const getCourseDetail = (id: string): CourseDetail | null => {
+  const courses: Record<string, CourseDetail> = {
+    '1': {
+      id: '1',
+      title: 'Introduction to Data Analysis',
+      description: 'Learn the fundamentals of data analysis and interpretation. This comprehensive course covers statistical methods, data visualization, and practical applications using modern tools.',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800',
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration: '2h 30m',
+      createdBy: 'Dr. Sarah Johnson',
+      status: 'published',
+      progress: 45,
+      createdAt: '2025-10-01',
+      updatedAt: '2025-10-15',
+      lastActivity: '2025-10-28',
+      milestones: [
+        { percentage: 25, completed: true, completedAt: '2025-10-10' },
+        { percentage: 50, completed: false },
+        { percentage: 75, completed: false },
+        { percentage: 100, completed: false },
+      ],
+    },
+    '2': {
+      id: '2',
+      title: 'Advanced JavaScript Patterns',
+      description: 'Master modern JavaScript design patterns and best practices. Explore async programming, functional patterns, and advanced object-oriented techniques.',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=800',
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration: '3h 15m',
+      createdBy: 'Mike Chen',
+      status: 'published',
+      progress: 0,
+      createdAt: '2025-09-15',
+      updatedAt: '2025-10-20',
+      milestones: [
+        { percentage: 25, completed: false },
+        { percentage: 50, completed: false },
+        { percentage: 75, completed: false },
+        { percentage: 100, completed: false },
+      ],
+    },
+    '3': {
+      id: '3',
+      title: 'UI/UX Design Fundamentals',
+      description: 'Create beautiful and user-friendly interfaces. Learn design principles, user research, prototyping, and usability testing.',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800',
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration: '4h 00m',
+      createdBy: 'Emily Davis',
+      status: 'published',
+      progress: 100,
+      createdAt: '2025-08-10',
+      updatedAt: '2025-10-25',
+      lastActivity: '2025-10-25',
+      milestones: [
+        { percentage: 25, completed: true, completedAt: '2025-09-01' },
+        { percentage: 50, completed: true, completedAt: '2025-09-15' },
+        { percentage: 75, completed: true, completedAt: '2025-10-01' },
+        { percentage: 100, completed: true, completedAt: '2025-10-25' },
+      ],
+    },
+    '4': {
+      id: '4',
+      title: 'Python for Beginners',
+      description: 'Start your programming journey with Python. Cover basics, data structures, functions, and object-oriented programming.',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800',
+      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      duration: '5h 20m',
+      createdBy: 'Alex Kumar',
+      status: 'published',
+      progress: 25,
+      createdAt: '2025-09-20',
+      updatedAt: '2025-10-22',
+      lastActivity: '2025-10-22',
+      milestones: [
+        { percentage: 25, completed: true, completedAt: '2025-10-22' },
+        { percentage: 50, completed: false },
+        { percentage: 75, completed: false },
+        { percentage: 100, completed: false },
+      ],
+    },
+  };
+
+  return courses[id] || null;
+};
