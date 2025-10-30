@@ -103,17 +103,6 @@ if 'sqlite' in DATABASE_URL.lower():
     print("ERROR: SQLite is not allowed. Use Supabase Postgres only.", file=sys.stderr)
     sys.exit(1)
 
-if '://' in DATABASE_URL and '@' in DATABASE_URL:
-    parts = DATABASE_URL.split('://', 1)
-    if len(parts) == 2:
-        scheme, rest = parts
-        if '@' in rest:
-            auth_part, host_part = rest.split('@', 1)
-            if ':' in auth_part:
-                username, password = auth_part.split(':', 1)
-                safe_password = quote(password, safe='')
-                DATABASE_URL = f"{scheme}://{username}:{safe_password}@{host_part}"
-
 try:
     DATABASES = {
         'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
