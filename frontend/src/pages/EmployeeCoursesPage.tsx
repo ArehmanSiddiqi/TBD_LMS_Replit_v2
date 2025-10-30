@@ -5,7 +5,6 @@ import { mockCourses } from '../mocks/courses';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { ProgressBar } from '../components/ui/ProgressBar';
 
 interface EmployeeCoursesPageProps {
   currentUser: User | null;

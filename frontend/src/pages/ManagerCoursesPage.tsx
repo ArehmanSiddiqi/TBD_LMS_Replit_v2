@@ -131,14 +131,12 @@ export const ManagerCoursesPage: React.FC<ManagerCoursesPageProps> = ({ currentU
                       >
                         View
                       </Button>
-                      {!isPublished && (
-                        <Button
-                          onClick={() => handleAssign(course.id)}
-                          className="flex-1 text-sm"
-                        >
-                          Assign
-                        </Button>
-                      )}
+                      <Button
+                        onClick={() => handleAssign(course.id)}
+                        className="flex-1 text-sm"
+                      >
+                        Assign
+                      </Button>
                     </div>
                     
                     {isDraft && (
