@@ -105,7 +105,10 @@ if 'sqlite' in DATABASE_URL.lower():
 
 try:
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=0)
+    }
+    DATABASES['default']['OPTIONS'] = {
+        'connect_timeout': 10,
     }
 except Exception as e:
     print(f"ERROR: Failed to parse DATABASE_URL: {e}", file=sys.stderr)
