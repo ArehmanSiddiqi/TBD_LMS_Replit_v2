@@ -111,7 +111,12 @@ export const AdminDashboard: React.FC = () => {
                 {courses.map((course) => (
                   <tr key={course.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="font-medium text-gray-900">{course.title}</div>
+                      <div className="relative group">
+                        <div className="font-medium text-gray-900 cursor-pointer">{course.title}</div>
+                        <div className="absolute left-0 top-full mt-1 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-2 px-3 z-10 whitespace-nowrap">
+                          Last updated: {course.lastUpdated} | Created by: {course.creatorName}
+                        </div>
+                      </div>
                       <div className="text-sm text-gray-500">Updated: {course.lastUpdated}</div>
                     </td>
                     <td className="py-3 px-4 text-gray-700">{course.creatorName}</td>

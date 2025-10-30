@@ -52,8 +52,8 @@ Preferred communication style: Simple, everyday language.
 
 **Navigation Structure**
 - Employees: Access to personal courses and progress tracking
-- Managers: Additional access to team management and course creation
-- Admins: Full system access including system-wide analytics
+- Managers: Additional access to team management, employee management, and course creation
+- Admins: Full system access including course approval workflows, platform analytics, and system-wide metrics
 
 ### Component Architecture
 
@@ -76,13 +76,46 @@ Preferred communication style: Simple, everyday language.
 **Current Approach**
 - In-memory mock data for rapid prototyping
 - Predefined users with fixed credentials
-- Mock courses, team members, and statistics
+- Mock courses, team members, employees, and statistics
+- Course approval states (Published, Draft, Needs Revision)
+- Platform insights and admin analytics
 - Data persists only in session (no backend calls)
 
 **Migration Path**
 - Mock services designed to be easily replaced with API calls
 - Type definitions already established for API contracts
 - Service layer pattern ready for HTTP client integration
+
+### Admin Features
+
+**Admin Dashboard**
+- Top-level metrics cards: Total Assigned, Started, Completed, Active Users (7d)
+- All Courses table with inline approval actions
+- Course status badges: Published (green), Draft (gray), Needs Revision (yellow)
+- Inactive Users tracking (30+ days with no activity)
+- Platform Insights section: Completion Rate, Active Courses, Total Users
+- Real-time course approval/rejection workflow
+
+**Course Approval Flow**
+- Modal-based approval interface with course details display
+- Two-action workflow: Approve & Publish or Reject with Note
+- Manager notes displayed for context
+- Visual status updates on approval/rejection
+- Smooth transitions and success animations
+
+**Admin Courses Page**
+- Grid view of all courses with thumbnails
+- Status filtering: All, Published, Draft, Needs Revision
+- Live search across title, description, and creator
+- Hover tooltips showing last update date and creator name
+- View and Approve/Review buttons per course card
+- Consistent with employee/manager course views
+
+**Components & Modals**
+- CourseApprovalModal: Full approval workflow with two-step rejection process
+- Hover tooltips using CSS group-hover patterns
+- Reusable status badge rendering
+- Consistent with existing design system (Button, Card, Input, Modal)
 
 ### Development Configuration
 

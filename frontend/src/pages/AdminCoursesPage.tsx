@@ -117,7 +117,12 @@ export const AdminCoursesPage: React.FC = () => {
               />
               <div className="p-6">
                 <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-bold text-lg text-gray-900 flex-1">{course.title}</h3>
+                  <div className="relative group flex-1">
+                    <h3 className="font-bold text-lg text-gray-900 cursor-pointer">{course.title}</h3>
+                    <div className="absolute left-0 top-full mt-1 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-2 px-3 z-10 whitespace-nowrap">
+                      Last updated: {course.lastUpdated} | Created by: {course.creatorName}
+                    </div>
+                  </div>
                   {getStatusBadge(course.status)}
                 </div>
                 
