@@ -4,6 +4,19 @@
 This is a Learning Management System (LMS) web application built with React, TypeScript, and a Django REST Framework backend. The platform provides role-based access control (Admin, Manager, Employee) for course management, progress tracking, and team oversight. It's a full-stack application designed to be scalable and maintainable, leveraging a Supabase PostgreSQL database and JWT authentication.
 
 ## Recent Changes (Oct 31, 2025)
+- **Course Creation & Approval Workflow**: Implemented complete course creation with role-based approval system
+  - Managers create courses → forced to "awaiting_approval" status, creates Approval record
+  - Admins can create courses directly as "draft" or "published", or approve/reject manager courses
+  - Admin-only actions: publish (approve & publish), unpublish (revert to draft), reject (with notes)
+  - Security: Only admins can update/delete courses, preventing managers from bypassing approval via PATCH
+  - Frontend: CreateNewCourse form with validation, YouTube URL normalization, live thumbnail preview
+  
+- **Employee Dashboard - API Integration**: Fixed employee courses page to display real published courses
+  - Replaced mock data with API calls using coursesService
+  - Employees now see all published courses from the database
+  - Dynamic course counts and proper filtering
+  - Loading states and error handling
+
 - **Employee Management - Edit Functionality**: Fixed and improved employee edit feature
   - Admin users can now successfully update employee information (name, job title, role)
   - Improved validation with clear error messages for required fields

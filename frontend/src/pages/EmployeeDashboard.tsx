@@ -1,71 +1,94 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../auth/authService';
+import { coursesService } from '../services/courses';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Button } from '../components/ui/Button';
 
 interface CourseData {
-  id: string;
+  id: number;
   title: string;
   description: string;
-  thumbnailUrl: string;
+  thumbnail_url: string;
+  status: string;
   progress?: number;
-  state: 'completed' | 'in-progress' | 'not-started';
+  state?: 'completed' | 'in-progress' | 'not-started';
 }
-
-const myCourses: CourseData[] = [
-  {
-    id: '3',
-    title: 'UI/UX Design Fundamentals',
-    description: 'Create beautiful and user-friendly interfaces.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400',
-    progress: 100,
-    state: 'completed',
-  },
-  {
-    id: '1',
-    title: 'Introduction to Data Analysis',
-    description: 'Learn the fundamentals of data analysis and interpretation.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400',
-    progress: 45,
-    state: 'in-progress',
-  },
-];
-
-const allCourses: CourseData[] = [
-  ...myCourses,
-  {
-    id: '2',
-    title: 'Advanced JavaScript Patterns',
-    description: 'Master modern JavaScript design patterns and best practices.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400',
-    state: 'not-started',
-  },
-];
 
 export const EmployeeDashboard: React.FC = () => {
   const currentUser = authService.getCurrentUser();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'my' | 'all'>('my');
   const [searchQuery, setSearchQuery] = useState('');
+  const [courses, setCourses] = useState<CourseData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const courses = activeTab === 'my' ? myCourses : allCourses;
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await coursesService.getCourses();
+        const publishedCourses = data.filter(course => course.status === 'published');
+        setCourses(publishedCourses);
+      } catch (err: any) {
+        console.error('Error fetching courses:', err);
+        setError(err.message || 'Failed to load courses');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // TODO: Once assignments/progress tracking is implemented, filter myCourses based on actual assignments
+  // For now, show all published courses in both tabs
+  const myCourses = courses;
+  const displayCourses = activeTab === 'my' ? myCourses : courses;
 
   const filteredCourses = useMemo(() => {
-    if (!searchQuery.trim()) return courses;
+    if (!searchQuery.trim()) return displayCourses;
     const query = searchQuery.toLowerCase();
-    return courses.filter(
+    return displayCourses.filter(
       course =>
         course.title.toLowerCase().includes(query) ||
         course.description.toLowerCase().includes(query)
     );
-  }, [courses, searchQuery]);
+  }, [displayCourses, searchQuery]);
 
-  const handleCourseClick = (courseId: string) => {
+  const handleCourseClick = (courseId: number) => {
     navigate(`/courses/${courseId}`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <PageHeader currentUser={currentUser} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="text-center py-12">
+            <p className="text-gray-500">Loading courses...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <PageHeader currentUser={currentUser} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="text-center py-12">
+            <p className="text-red-500">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -115,7 +138,7 @@ export const EmployeeDashboard: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                My Courses (2)
+                My Courses ({myCourses.length})
                 {activeTab === 'my' && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
                 )}
@@ -128,7 +151,7 @@ export const EmployeeDashboard: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                All Courses (3)
+                All Courses ({courses.length})
                 {activeTab === 'all' && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
                 )}
@@ -152,7 +175,7 @@ export const EmployeeDashboard: React.FC = () => {
             <Card key={course.id} className="overflow-hidden">
               <div className="relative">
                 <img
-                  src={course.thumbnailUrl}
+                  src={course.thumbnail_url}
                   alt={course.title}
                   className="w-full h-48 object-cover"
                 />
@@ -161,9 +184,9 @@ export const EmployeeDashboard: React.FC = () => {
                     Completed
                   </div>
                 )}
-                {course.state === 'not-started' && (
-                  <div className="absolute top-3 right-3 bg-gray-400 text-white text-xs font-medium px-3 py-1 rounded">
-                    Browse
+                {(!course.state || course.state === 'not-started') && (
+                  <div className="absolute top-3 right-3 bg-blue-500 text-white text-xs font-medium px-3 py-1 rounded">
+                    Available
                   </div>
                 )}
               </div>
@@ -176,7 +199,7 @@ export const EmployeeDashboard: React.FC = () => {
                   {course.description}
                 </p>
                 
-                {course.state !== 'not-started' && course.progress !== undefined && (
+                {course.state && course.state !== 'not-started' && course.progress !== undefined && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-gray-600">Progress</span>
@@ -190,7 +213,7 @@ export const EmployeeDashboard: React.FC = () => {
                   onClick={() => handleCourseClick(course.id)}
                   className="w-full"
                 >
-                  {course.state === 'not-started' ? 'Start Course' : 'Continue'}
+                  {(!course.state || course.state === 'not-started') ? 'Start Course' : 'Continue'}
                 </Button>
               </div>
             </Card>
