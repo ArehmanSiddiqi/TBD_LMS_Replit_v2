@@ -49,4 +49,16 @@ export const coursesService = {
   async delete(id: number): Promise<void> {
     return api.delete<void>(`/courses/${id}/`);
   },
+
+  async publish(id: number): Promise<Course> {
+    return api.patch<Course>(`/courses/${id}/publish/`);
+  },
+
+  async unpublish(id: number): Promise<Course> {
+    return api.patch<Course>(`/courses/${id}/unpublish/`);
+  },
+
+  async reject(id: number, note: string): Promise<Course> {
+    return api.post<Course>(`/courses/${id}/reject/`, { note });
+  },
 };
