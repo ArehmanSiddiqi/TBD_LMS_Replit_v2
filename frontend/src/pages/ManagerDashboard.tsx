@@ -30,16 +30,14 @@ export const ManagerDashboard: React.FC = () => {
       setLoading(true);
       setError('');
       
-      const [assignmentsData, usersData] = await Promise.all([
+      const [assignmentsData, teamMembers] = await Promise.all([
         assignmentsService.getTeamAssignments(),
-        usersService.search(),
+        usersService.getTeamMembers(),
       ]);
 
       setAssignments(assignmentsData);
       
-      const employees = usersData.filter(u => u.role === 'EMPLOYEE');
-      
-      const stats = employees.map(user => {
+      const stats = teamMembers.map(user => {
         const userAssignments = assignmentsData.filter(a => a.user === user.id);
         const avgProgress = userAssignments.length > 0
           ? Math.round(userAssignments.reduce((sum, a) => sum + a.progress_pct, 0) / userAssignments.length)

@@ -37,14 +37,12 @@ export const MyTeamPage: React.FC = () => {
       setLoading(true);
       setError('');
       
-      const [users, assignments] = await Promise.all([
-        usersService.search(),
+      const [teamUsers, assignments] = await Promise.all([
+        usersService.getTeamMembers(),
         assignmentsService.getTeamAssignments(),
       ]);
-
-      const employees = users.filter(u => u.role === 'EMPLOYEE');
       
-      const membersWithStats = employees.map(employee => {
+      const membersWithStats = teamUsers.map(employee => {
         const userAssignments = assignments.filter(a => a.user === employee.id);
         return {
           ...employee,

@@ -394,6 +394,24 @@ class TeamViewSet(viewsets.ModelViewSet):
     serializer_class = TeamSerializer
     permission_classes = [IsManagerOrAdmin]
     
+    @action(detail=False, methods=['get'])
+    def members(self, request):
+        """Get the manager's team members"""
+        user = request.user
+        
+        if user.role == 'ADMIN':
+            # Admins see all users
+            members = User.objects.all()
+        elif user.team:
+            # Managers see their team members
+            members = User.objects.filter(team=user.team)
+        else:
+            # Manager with no team sees no members
+            members = User.objects.none()
+        
+        serializer = EmployeeSerializer(members, many=True)
+        return Response(serializer.data)
+    
     @action(detail=False, methods=['post'])
     def add_member(self, request):
         """Add a user to the manager's team"""

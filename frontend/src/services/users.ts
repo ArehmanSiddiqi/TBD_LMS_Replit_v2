@@ -19,6 +19,10 @@ class UsersService {
     return api.get<User[]>(endpoint);
   }
 
+  async getTeamMembers(): Promise<User[]> {
+    return api.get<User[]>('/team/members/');
+  }
+
   async addTeamMember(data: TeamMemberAddData): Promise<void> {
     return api.post<void>('/team/add_member/', data);
   }
