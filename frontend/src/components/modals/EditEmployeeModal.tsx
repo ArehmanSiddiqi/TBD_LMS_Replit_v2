@@ -36,6 +36,11 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   const handleSave = async () => {
     if (!employee) return;
 
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('First name and last name are required');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -61,8 +66,6 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     onClose();
     setError(null);
   };
-
-  const isFormValid = firstName.trim() !== '' && lastName.trim() !== '';
 
   return (
     <Modal
@@ -154,7 +157,7 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         <Button variant="secondary" onClick={handleClose} disabled={loading}>
           Cancel
         </Button>
-        <Button onClick={handleSave} disabled={!isFormValid || loading}>
+        <Button onClick={handleSave} disabled={loading}>
           {loading ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
