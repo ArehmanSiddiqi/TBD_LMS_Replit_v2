@@ -1,9 +1,9 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from django.db import connection
+from django.db import connection, models
 from django.utils import timezone
 from datetime import timedelta
 import secrets
@@ -14,7 +14,7 @@ from .serializers import (
     EmployeeSerializer
 )
 from .jwt_utils import create_access_token, create_refresh_token, decode_refresh_token, blacklist_refresh_token
-from .permissions import IsAdmin, IsManagerOrAdmin
+from .permissions import IsAdmin, IsManagerOrAdmin, IsAuthenticated
 
 
 @api_view(['POST'])
@@ -380,6 +380,110 @@ class TeamViewSet(viewsets.ModelViewSet):
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """Role-aware course filtering"""
+        user = self.request.user
+        
+        if user.role == 'ADMIN':
+            # Admin sees all courses
+            return Course.objects.all()
+        elif user.role in ['MANAGER', 'TL', 'SRMGR']:
+            # Manager sees published courses + their own courses
+            return Course.objects.filter(
+                models.Q(status='published') | models.Q(created_by=user)
+            )
+        else:
+            # Employee sees only published courses
+            return Course.objects.filter(status='published')
+    
+    def create(self, request, *args, **kwargs):
+        """Handle role-based course creation"""
+        user = request.user
+        data = request.data.copy()
+        
+        # Set created_by
+        data['created_by'] = user.id
+        
+        # Role-based status logic
+        if user.role in ['MANAGER', 'TL', 'SRMGR']:
+            # Managers always create courses as awaiting_approval
+            data['status'] = 'awaiting_approval'
+        elif user.role == 'ADMIN':
+            # Admin can set status (default to draft if not provided)
+            if 'status' not in data:
+                data['status'] = 'draft'
+        else:
+            # Employees cannot create courses
+            return Response(
+                {'error': 'You do not have permission to create courses'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        course = serializer.save()
+        
+        # Create approval request for managers
+        if user.role in ['MANAGER', 'TL', 'SRMGR']:
+            Approval.objects.create(
+                course=course,
+                requested_by=user,
+                status='pending'
+            )
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    @action(detail=True, methods=['patch'], permission_classes=[IsAdmin])
+    def publish(self, request, pk=None):
+        """Publish a course and approve it (Admin only)"""
+        course = self.get_object()
+        course.status = 'published'
+        course.save()
+        
+        # Update related approval if exists
+        approval = Approval.objects.filter(course=course, status='pending').first()
+        if approval:
+            approval.status = 'approved'
+            approval.approved_by = request.user
+            approval.reviewed_at = timezone.now()
+            approval.save()
+        
+        serializer = self.get_serializer(course)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['patch'], permission_classes=[IsAdmin])
+    def unpublish(self, request, pk=None):
+        """Unpublish a course (Admin only)"""
+        course = self.get_object()
+        course.status = 'draft'
+        course.save()
+        
+        serializer = self.get_serializer(course)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
+    def reject(self, request, pk=None):
+        """Reject a course approval request (Admin only)"""
+        course = self.get_object()
+        note = request.data.get('note', '')
+        
+        course.status = 'draft'
+        course.save()
+        
+        # Update related approval
+        approval = Approval.objects.filter(course=course, status='pending').first()
+        if approval:
+            approval.status = 'rejected'
+            approval.approved_by = request.user
+            approval.reviewed_at = timezone.now()
+            approval.rejection_note = note
+            approval.save()
+        
+        serializer = self.get_serializer(course)
+        return Response(serializer.data)
 
 
 class ResourceViewSet(viewsets.ModelViewSet):
