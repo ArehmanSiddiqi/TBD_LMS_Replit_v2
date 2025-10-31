@@ -115,7 +115,7 @@ export const ManagerCoursesPage: React.FC<ManagerCoursesPageProps> = ({ currentU
           </div>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && filteredCourses.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map((course) => {
               const isDraft = course.status === 'draft';
@@ -214,13 +214,13 @@ export const ManagerCoursesPage: React.FC<ManagerCoursesPageProps> = ({ currentU
               </Card>
             );
           })}
-        </div>
+          </div>
+        )}
 
-          {filteredCourses.length === 0 && !loading && (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No courses found matching your criteria.</p>
-            </div>
-          )}
+        {!loading && !error && filteredCourses.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-600">No courses found matching your criteria.</p>
+          </div>
         )}
       </div>
     </div>
