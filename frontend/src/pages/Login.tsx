@@ -27,17 +27,36 @@ export const Login: React.FC = () => {
   
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    const user = authService.login({ email, password });
+    try {
+      const response = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
 
-    if (user) {
-      const redirectPath = authService.getRedirectPath(user.role);
-      navigate(redirectPath);
-    } else {
-      setError('Invalid email or password');
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        const redirectPath = authService.getRedirectPath(data.user.role);
+        navigate(redirectPath);
+      } else {
+        setError(data.error || 'Invalid email or password');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -231,11 +250,18 @@ export const Login: React.FC = () => {
                 </div>
               )}
 
+              {success && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-600">{success}</p>
+                </div>
+              )}
+
               <Button 
                 type="submit" 
+                disabled={loading}
                 className="w-full bg-[#3c65f5] hover:bg-[#2d4ec7] focus:ring-[#43b65d] focus:ring-2 focus:ring-offset-2 transition-all duration-200"
               >
-                Sign In
+                {loading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
           )}
@@ -290,6 +316,12 @@ export const Login: React.FC = () => {
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
+              {success && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-600">{success}</p>
                 </div>
               )}
 
