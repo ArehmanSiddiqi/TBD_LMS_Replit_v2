@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../auth/authService';
-import { assignmentsService, Assignment } from '../services/assignments';
+import { assignmentsService, type Assignment } from '../services/assignments';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
 import { ProgressBar } from '../components/ui/ProgressBar';

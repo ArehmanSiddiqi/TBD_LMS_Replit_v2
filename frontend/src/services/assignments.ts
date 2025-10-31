@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export interface Assignment {
+export type Assignment = {
   id: number;
   user: number;
   user_name: string;
@@ -25,17 +25,17 @@ export interface Assignment {
   last_activity_at: string | null;
   assigned_at: string;
   completed_at: string | null;
-}
+};
 
-export interface CreateAssignmentData {
+export type CreateAssignmentData = {
   course_id: number;
   user_id?: number;
-}
+};
 
-export interface UpdateProgressData {
+export type UpdateProgressData = {
   progress_pct: number;
   status?: 'not_started' | 'in_progress' | 'completed';
-}
+};
 
 class AssignmentsService {
   async getMyAssignments(): Promise<Assignment[]> {
