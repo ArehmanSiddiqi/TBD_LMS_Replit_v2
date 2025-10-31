@@ -1,8 +1,6 @@
-import axios from 'axios';
+import { api } from './api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
-
-interface Assignment {
+export interface Assignment {
   id: number;
   user: number;
   user_name: string;
@@ -29,61 +27,36 @@ interface Assignment {
   completed_at: string | null;
 }
 
-interface CreateAssignmentData {
+export interface CreateAssignmentData {
   course_id: number;
   user_id?: number;
 }
 
-interface UpdateProgressData {
+export interface UpdateProgressData {
   progress_pct: number;
   status?: 'not_started' | 'in_progress' | 'completed';
 }
 
 class AssignmentsService {
-  private getAuthHeader() {
-    const token = localStorage.getItem('access_token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
   async getMyAssignments(): Promise<Assignment[]> {
-    const response = await axios.get(`${API_BASE_URL}/assignments/mine/`, {
-      headers: this.getAuthHeader(),
-    });
-    return response.data;
+    return api.get<Assignment[]>('/assignments/mine/');
   }
 
   async getTeamAssignments(): Promise<Assignment[]> {
-    const response = await axios.get(`${API_BASE_URL}/assignments/team/`, {
-      headers: this.getAuthHeader(),
-    });
-    return response.data;
+    return api.get<Assignment[]>('/assignments/team/');
   }
 
   async createAssignment(data: CreateAssignmentData): Promise<Assignment> {
-    const response = await axios.post(`${API_BASE_URL}/assignments/`, data, {
-      headers: this.getAuthHeader(),
-    });
-    return response.data;
+    return api.post<Assignment>('/assignments/', data);
   }
 
   async updateProgress(assignmentId: number, data: UpdateProgressData): Promise<Assignment> {
-    const response = await axios.patch(
-      `${API_BASE_URL}/assignments/${assignmentId}/progress/`,
-      data,
-      {
-        headers: this.getAuthHeader(),
-      }
-    );
-    return response.data;
+    return api.patch<Assignment>(`/assignments/${assignmentId}/progress/`, data);
   }
 
   async getAssignment(assignmentId: number): Promise<Assignment> {
-    const response = await axios.get(`${API_BASE_URL}/assignments/${assignmentId}/`, {
-      headers: this.getAuthHeader(),
-    });
-    return response.data;
+    return api.get<Assignment>(`/assignments/${assignmentId}/`);
   }
 }
 
 export const assignmentsService = new AssignmentsService();
-export type { Assignment, CreateAssignmentData, UpdateProgressData };
