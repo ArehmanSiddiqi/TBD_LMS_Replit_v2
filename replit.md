@@ -9,7 +9,8 @@ This is a Learning Management System (LMS) web application built with React, Typ
     - Assignment endpoints: create (`POST /assignments/`), list mine (`GET /assignments/mine/`), list team (`GET /assignments/team/`), update progress (`PATCH /assignments/{id}/progress/`)
     - MinimalCourseSerializer with nested course data in assignments (title, thumbnail, video_url, duration, etc.)
     - User search endpoint (`GET /users/search/?q=`) for managers to find employees
-    - Team management endpoint (`POST /team/add_member/`) to build teams
+    - Team management endpoints: get members (`GET /team/members/`), add member (`POST /team/add_member/`)
+    - Team membership filtering: managers see only their team, admins see all users
     - Auto-completion logic: assignments automatically set to "completed" when progress reaches 100%
     - Upsert logic: creating assignment for existing user+course pair returns existing assignment
   - **Frontend**:
