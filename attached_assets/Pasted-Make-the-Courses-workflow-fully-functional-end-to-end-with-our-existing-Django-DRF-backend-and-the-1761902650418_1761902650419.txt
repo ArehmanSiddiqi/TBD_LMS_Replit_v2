@@ -1,0 +1,141 @@
+Make the Courses workflow fully functional end-to-end with our existing Django + DRF backend and the current React frontend. Keep all existing routes and UI; add the backend logic, API endpoints, and minimal frontend wiring to call them. No mock data. Use the already configured Supabase DATABASE_URL and existing JWT auth. Do not change ports.
+
+SCOPE SUMMARY
+
+Managers can create courses (saved as “awaiting_approval”), and assign any published (or their own awaiting_approval) course to employees.
+
+Admins can approve & publish or reject manager-created courses, and can unpublish a published course.
+
+Employees see only their assigned courses (plus any published courses you already list globally—keep current UX, but “My Courses” must reflect assignments).
+
+Track created_by, assigned_by, assigned_to, and show them where relevant.
+
+BACKEND (Django + DRF)
+
+MODELS (extend if missing; keep existing names where you already created them)
+
+Course: fields title, description, video_url, thumbnail_url, level, duration_minutes, status, created_by (FK User), updated_at.
+Status enum: draft, awaiting_approval, published. (If draft already used for managers, treat new drafts as awaiting_approval.)
+
+Approval: course (FK), requested_by (FK User), approved_by (FK User, null), note (Text, blank), status ∈ {pending, approved, rejected}, created_at, updated_at.
+
+Assignment: user (FK User), course (FK Course), assigned_by (FK User), status ∈ {not_started, in_progress, completed}, progress_pct INT default 0, last_activity_at.
+Ensure unique_together = (user, course) for assignments.
+
+PERMISSIONS (DRF)
+
+ADMIN: full access to courses; can approve, publish, unpublish, reject.
+
+MANAGER/TL: can create courses; on create set status="awaiting_approval" and create Approval(status="pending", requested_by=request.user). Can assign courses to employees on their team. Cannot publish.
+
+EMPLOYEE: read only; can list own assignments (/assignments/mine).
+
+SERIALIZERS (responses used by frontend)
+
+CourseSerializer returns:
+{ id, title, description, thumbnail_url, video_url, status, level, duration_minutes, updated_at, created_by_name }
+
+AssignmentSerializer returns:
+{ id, course: CourseSerializer(minimal fields), user_id, assigned_by_name, status, progress_pct, last_activity_at }
+
+ENDPOINTS (all under /api/v1)
+
+GET /courses/ — role-aware list:
+
+ADMIN: all courses
+
+MANAGER/TL: all published + own awaiting_approval/draft
+
+EMPLOYEE: published (for catalog views)
+Support ?q= and ?status=.
+
+POST /courses/ — MANAGER/TL/ADMIN create:
+
+On MANAGER/TL: set created_by=request.user, status="awaiting_approval", create Approval(pending).
+
+On ADMIN: may set status="published" immediately.
+
+PATCH /courses/{id}/publish — ADMIN only:
+
+Sets status="published", updates related Approval to approved.
+
+PATCH /courses/{id}/unpublish — ADMIN only:
+
+Sets status="draft" (or "awaiting_approval" if you prefer). This hides it from EMPLOYEE and from MANAGER lists except if created_by.
+
+POST /courses/{id}/reject — ADMIN only:
+
+Body: { note } → marks Approval rejected, sets Course status="draft".
+
+GET /assignments/mine — EMPLOYEE:
+
+Returns the current user’s assignments (with nested minimal course fields).
+
+POST /assignments/ — MANAGER/TL:
+
+Body: { course_id, user_id } → create or upsert assignment with assigned_by=request.user, status="not_started".
+
+GET /assignments/team — MANAGER/TL:
+
+Returns team’s assignments (optional but useful for your Manager dashboard).
+
+PATCH /assignments/{id}/progress — update progress (keep as you already planned).
+
+HEALTH + CORS
+
+Keep /health/db as is. Ensure CORS accepts the frontend origin from env. No changes to ports.
+
+SEED DEMO (update)
+
+Give each user a job_title so Employees page has real data.
+
+Create 2-3 sample courses: one published, one awaiting_approval (created_by manager), one draft.
+
+Create 1–2 sample assignments to the employee for verification.
+
+FRONTEND (minimal wiring only; keep all existing screens/styles/links)
+7) API CLIENT
+
+Reuse VITE_API_BASE_URL and existing auth store (access token). For all calls attach Authorization: Bearer <token>.
+
+COURSES PAGES (role-aware behavior)
+
+Manager Courses page:
+
+“Create Course” → POST /courses/ with form fields. On success, show card with badge “Awaiting Approval” and the helper text “Awaiting admin review for publication.”
+
+“Assign” button → opens existing modal; on confirm call POST /assignments for each selected employee; show toast “Assigned to X employees.”
+
+Admin Courses page:
+
+Each awaiting_approval card shows buttons “Approve & Publish” (calls PATCH /courses/{id}/publish) and “Reject with Note” (POST /courses/{id}/reject).
+
+Each published card shows “Unpublish” (calls PATCH /courses/{id}/unpublish); after unpublish, badge switches from green “Published” to gray “Draft”.
+
+Employee “My Courses”:
+
+Replace data source with GET /assignments/mine and render the nested course data; progress bar uses progress_pct.
+
+VISUAL FEEDBACK
+
+Loading/skeletons for lists; inline errors with retry.
+
+After create/assign/publish/unpublish/reject, refetch the affected list so UI updates without reload.
+
+ACCEPTANCE TESTS (run + verify)
+
+Login as MANAGER → create a course; the card shows Awaiting Approval; assign any published course to the employee user; switch to employee and confirm it appears in “My Courses”.
+
+Login as ADMIN → see the manager’s course in “awaiting approval”; click Approve & Publish; badge flips to Published and the course appears in employee catalog; click Unpublish and verify it no longer appears for employee and manager (except creator if you keep showing drafts to creator).
+
+Login as EMPLOYEE → “My Courses” shows only assignments; progress update endpoint still works.
+
+DELIVERABLES
+
+Updated models, serializers, permissions, and viewsets; new endpoints above; migrations committed.
+
+Frontend wired to these endpoints with existing UI; no design or route changes.
+
+README note: add the new endpoints and brief usage.
+
+Please implement exactly this, keeping the current repository structure and existing UI intact.

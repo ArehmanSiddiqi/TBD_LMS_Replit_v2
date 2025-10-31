@@ -1,0 +1,65 @@
+Make the Create Course screen/modal fully functional end-to-end using the existing Django + DRF API and JWT auth. Do not change routes, ports, or page copy; just wire the form and enforce role behavior.
+
+Functional requirements
+
+Submit actions
+
+Save as Draft (primary in the modal):
+
+Manager/TL → POST /api/v1/courses/ with status="awaiting_approval" (ignore any status passed). Also create an Approval(status="pending", requested_by=<manager>) on the backend.
+
+Admin → POST /api/v1/courses/ honoring the selected status (draft or published).
+
+Cancel closes the modal without side effects.
+
+On success: close modal, show toast, and refetch the course list so the new card appears (Manager sees “Awaiting Approval”; Admin sees “Published” or “Draft”).
+
+Role-aware UI in the modal
+
+Status select:
+
+Manager/TL → dropdown is disabled and visually locked to “Draft / Awaiting admin review”.
+
+Admin → dropdown enabled with options Draft and Published.
+
+Buttons remain exactly as designed; only enabled/disabled states change by role.
+
+Form fields & validation (client side)
+
+Course Title (required, 3–120 chars).
+
+Description (required, 10–2,000 chars).
+
+Video URL (required) — normalize to YouTube embed (/embed/<id>) on submit if a watch URL is entered; if not YouTube, keep raw link.
+
+Thumbnail URL (required) — must be http(s) and end with .png|.jpg|.jpeg|.webp; show a live thumbnail preview below the input (object-cover, fixed ratio) and a fallback image if it fails to load.
+
+Status (see role rules above).
+
+Disable “Save as Draft” until required fields are valid.
+
+Backend expectations (DRF)
+
+POST /api/v1/courses/ accepts: {title, description, video_url, thumbnail_url, level(optional), duration_minutes(optional), status(optional)}.
+
+For Manager/TL requests: server must force status="awaiting_approval" and create Approval(pending); ignore any client status.
+
+Response returns the new course via CourseSerializer ({id,title,description,thumbnail_url,video_url,status,created_by_name,...}).
+
+Frontend wiring
+
+Add a small createCourse(payload) function in your API layer that POSTs to /courses/ with Authorization: Bearer <access>.
+
+In the modal, on submit: show loading state on the primary button, then revert and close on success; on error show a small inline error message at the top.
+
+After success, refetch the current courses list so the grid reflects the new item.
+
+Acceptance checks
+
+Login as Manager → create a course; list shows the new card with “Awaiting Approval” badge and helper text “Awaiting admin review for publication.”
+
+Login as Admin → create a course with status Published; the card shows Published immediately.
+
+Manager cannot open the status dropdown; Admin can.
+
+Thumbnail preview fits/cover and loads from the provided URL; invalid URLs show the fallback preview.
