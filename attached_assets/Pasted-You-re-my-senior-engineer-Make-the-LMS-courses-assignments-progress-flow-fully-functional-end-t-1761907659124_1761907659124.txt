@@ -1,0 +1,128 @@
+You’re my senior engineer. Make the LMS courses + assignments + progress flow fully functional end-to-end using our existing Django + DRF backend and the current React frontend. Keep the repo structure, routes, wording, and UI; replace mocks and wire real APIs. Do not mention or change ports. Media stays links-only (YouTube iframe, external thumbnails). Use existing env: VITE_API_BASE_URL, JWT auth, Supabase DB.
+
+GOALS
+
+Employee Dashboard works and shows only the employee’s assigned courses with progress.
+
+Start Course reveals the video and marks the assignment as started; progress updates while watching.
+
+Tabs on Courses page: “My Courses” (assigned/started) and “All Courses” (all published) with counts.
+
+Progress tracking stored and visible to employees and managers; manager dashboard aggregates it.
+
+Assignment UX:
+a) From a Course card → select employees to assign that course.
+b) From a User card (My Team) → select a course to assign to that user.
+
+Managers can search employees and add them to their team.
+
+Course lifecycle already set up: manager creates course → status “awaiting approval”; admin approves/publishes or rejects; admin can unpublish.
+
+BACKEND (DRF) — implement/confirm these endpoints and behaviors
+A) Courses
+
+GET /api/v1/courses/?q=&status=
+Role-aware list:
+• EMPLOYEE: published only (for “All Courses”).
+• MANAGER/TL: published + own awaiting_approval/drafts.
+• ADMIN: all.
+
+POST /api/v1/courses/
+Manager/TL: force status="awaiting_approval" and create Approval(pending, requested_by=request.user); Admin may set published or draft.
+
+PATCH /api/v1/courses/{id}/publish (ADMIN) → set published, mark approval approved.
+
+PATCH /api/v1/courses/{id}/unpublish (ADMIN) → set draft (hidden from employee + non-creator manager).
+
+POST /api/v1/courses/{id}/reject (ADMIN) {note} → approval rejected, course → draft.
+
+B) Assignments
+
+POST /api/v1/assignments/ body { course_id, user_id } → upsert unique (user,course), set assigned_by=request.user, status="not_started".
+
+GET /api/v1/assignments/mine → employee’s list with nested minimal course fields.
+
+GET /api/v1/assignments/team (MANAGER/TL) → assignments of users in manager’s team (for manager dashboard + “My Team”).
+
+PATCH /api/v1/assignments/{id}/progress body { progress_pct, status? } → update progress_pct, bump last_activity_at, append ProgressEvent(assignment, pct, at). If progress_pct >= 100 set status="completed".
+
+C) Teams & People
+
+GET /api/v1/employees/?q= (MANAGER/ADMIN) → { id, name, email, designation, team_id } with text search.
+
+POST /api/v1/team/members (MANAGER/TL) { user_id } → add user to manager’s team (uses manager.user.team). Idempotent.
+
+D) Serializers
+Return per course: { id, title, description, thumbnail_url, video_url, status, level, duration_minutes, updated_at, created_by_name }.
+Return per assignment (mine/team): { id, course:{…minimal}, user_id, user_name?, assigned_by_name, status, progress_pct, last_activity_at }.
+
+FRONTEND — wiring & fixes (keep design)
+
+Employee Dashboard
+
+Replace any coursesService.getCourses with real calls: load GET /assignments/mine; render cards from assignment.course.
+
+Each card shows status/progress; clicking Continue/Start goes to /courses/:id.
+
+Course View
+
+On Start Course:
+• Create the assignment if missing (POST /assignments), set status="in_progress" and progress_pct ≥ 1 via PATCH.
+• Reveal/scroll to the video section and focus.
+
+Progress tracking: use YouTube IFrame API; every 10s compute currentTime/duration*100 (floored), send PATCH /assignments/{id}/progress only when pct increases by ≥5%. On end, set 100% + completed. Show the live pct in the right panel and the main progress bar.
+
+Courses Page Tabs
+
+Header adds tabs: My Courses (N) and All Courses (M).
+
+My Courses → GET /assignments/mine; grid shows only those.
+
+All Courses → GET /courses?status=published; keep search filter client-side.
+
+Keep card actions role-aware:
+• EMPLOYEE: Start/Continue/Review only.
+• MANAGER: View, Assign (no publish).
+• ADMIN: View, Approve & Publish / Unpublish as applicable.
+
+Assign flow – Course → Employees
+
+From a Course card’s Assign: open modal listing employees (manager’s team by default, with a search). Pre-badge “Already assigned”. Submit → POST /assignments per selected user; toast success; refresh team assignments and (optionally) employee dashboard cache.
+
+Assign flow – Employee → Courses
+
+From a User card’s Assign on My Team: open modal listing courses (published + manager’s own awaiting_approval). Searchable. Selecting courses creates assignments for that employee. Same POST logic and toasts.
+
+Manager: My Team + Dashboard
+
+My Team pulls GET /employees?q= (team members); counts beside each card come from GET /assignments/team grouped by user.
+
+Dashboard metrics: use team assignments to compute totals (active learners = distinct users with status != not_started; completion rate = completed/assigned; avg progress = mean progress_pct). Populate the overview table from team assignments.
+
+Create Course Modal
+
+Wire submit to POST /courses with role rules (manager → awaiting approval). After success, refetch and show badge Awaiting Approval with helper text. (Thumbnail remains URL + live preview.)
+
+State, errors, UX
+
+Centralize API calls under src/api/* with Authorization: Bearer <access>.
+
+Loading states (skeletons), inline errors with retry, optimistic toasts on success.
+
+Keep current layout/styling; only change data sources and add tabs/modals logic.
+
+ACCEPTANCE CHECKLIST
+
+EMPLOYEE: Dashboard loads without error; shows only assigned courses with correct progress; Start Course starts video and increments progress.
+
+COURSES: Tabs work; search filters within each tab; cards reflect correct actions by role.
+
+MANAGER: “Assign” from course → choose employees; “Assign” from user → choose courses; both create assignments and appear in the employee’s Dashboard and in manager’s My Team. Can search and add employees to team.
+
+MANAGER DASHBOARD: metrics and table reflect team progress from real assignments; refresh after assignments/progress changes.
+
+ADMIN: sees awaiting approvals; can approve/publish, reject with note, and unpublish published courses; unpublishing removes course from employee “All Courses” and manager catalog (except creator’s drafts).
+
+All calls respect JWT auth; no mock data remains; CORS works via env config.
+
+Deliverables: backend endpoints + serializers + permissions implemented; migrations committed; frontend hooked to these endpoints; tabs and both assign modals functional; progress tracking operational; manager dashboard numbers derived from real data.
