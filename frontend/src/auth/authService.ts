@@ -23,8 +23,6 @@ const PRESET_USERS: Record<string, { password: string; role: UserRole; name: str
   },
 };
 
-const AUTH_STORAGE_KEY = 'lms_auth_user';
-
 export const authService = {
   login: (credentials: Credentials): User | null => {
     const userConfig = PRESET_USERS[credentials.email];
@@ -36,7 +34,7 @@ export const authService = {
         name: userConfig.name,
       };
       
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(user));
       
       return user;
     }
@@ -45,14 +43,23 @@ export const authService = {
   },
 
   logout: (): void => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    localStorage.removeItem('user');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
   },
 
   getCurrentUser: (): User | null => {
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+    const stored = localStorage.getItem('user');
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const userData = JSON.parse(stored);
+        return {
+          email: userData.email,
+          role: userData.role,
+          name: userData.firstName && userData.lastName 
+            ? `${userData.firstName} ${userData.lastName}`.trim()
+            : userData.email
+        };
       } catch {
         return null;
       }
