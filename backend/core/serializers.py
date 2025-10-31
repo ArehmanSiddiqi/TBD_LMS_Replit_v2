@@ -62,26 +62,60 @@ class ResourceSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
 
+class MinimalCourseSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.SerializerMethodField()
+    duration_minutes = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'description', 'thumbnail_url', 'video_url', 'status', 
+                  'level', 'duration', 'duration_minutes', 'created_by_name', 'updated_at']
+        read_only_fields = ['id', 'updated_at']
+    
+    def get_created_by_name(self, obj):
+        return obj.created_by.get_full_name() if obj.created_by else None
+    
+    def get_duration_minutes(self, obj):
+        if obj.duration:
+            try:
+                return int(obj.duration.split()[0])
+            except (ValueError, IndexError):
+                return None
+        return None
+
+
 class AssignmentSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
     course_title = serializers.SerializerMethodField()
     assigned_by_name = serializers.SerializerMethodField()
+    course = MinimalCourseSerializer(read_only=True)
+    course_id = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(), 
+        source='course', 
+        write_only=True
+    )
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), 
+        source='user', 
+        write_only=True,
+        required=False
+    )
     
     class Meta:
         model = Assignment
-        fields = ['id', 'user', 'user_name', 'course', 'course_title', 'assigned_by', 
-                  'assigned_by_name', 'status', 'progress_pct', 'last_activity_at', 
+        fields = ['id', 'user', 'user_id', 'user_name', 'course', 'course_id', 'course_title', 
+                  'assigned_by', 'assigned_by_name', 'status', 'progress_pct', 'last_activity_at', 
                   'assigned_at', 'completed_at']
-        read_only_fields = ['id', 'assigned_at']
+        read_only_fields = ['id', 'assigned_at', 'assigned_by', 'user']
     
     def get_user_name(self, obj):
-        return obj.user.full_name if obj.user else None
+        return obj.user.get_full_name() if obj.user else None
     
     def get_course_title(self, obj):
         return obj.course.title if obj.course else None
     
     def get_assigned_by_name(self, obj):
-        return obj.assigned_by.full_name if obj.assigned_by else None
+        return obj.assigned_by.get_full_name() if obj.assigned_by else None
 
 
 class ProgressEventSerializer(serializers.ModelSerializer):

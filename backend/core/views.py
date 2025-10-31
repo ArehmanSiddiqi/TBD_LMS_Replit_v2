@@ -369,12 +369,69 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsManagerOrAdmin]
+    
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        """Search employees by name or email (for managers to find team members)"""
+        query = request.GET.get('q', '').strip()
+        
+        users = User.objects.all()
+        
+        if query:
+            users = users.filter(
+                models.Q(first_name__icontains=query) |
+                models.Q(last_name__icontains=query) |
+                models.Q(email__icontains=query)
+            )
+        
+        # Use EmployeeSerializer for the response
+        serializer = EmployeeSerializer(users, many=True)
+        return Response(serializer.data)
 
 
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     permission_classes = [IsManagerOrAdmin]
+    
+    @action(detail=False, methods=['post'])
+    def add_member(self, request):
+        """Add a user to the manager's team"""
+        user_id = request.data.get('user_id')
+        
+        if not user_id:
+            return Response(
+                {'error': 'user_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user_to_add = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Get or create team for the manager
+        manager = request.user
+        team = manager.team
+        
+        if not team:
+            # Create a team for this manager if they don't have one
+            team = Team.objects.create(
+                name=f"{manager.get_full_name()}'s Team",
+                manager=manager
+            )
+            manager.team = team
+            manager.save(update_fields=['team'])
+        
+        # Add user to team
+        user_to_add.team = team
+        user_to_add.save(update_fields=['team'])
+        
+        return Response({
+            'message': 'User added to team successfully',
+            'user': EmployeeSerializer(user_to_add).data,
+            'team': TeamSerializer(team).data
+        })
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -504,6 +561,150 @@ class ResourceViewSet(viewsets.ModelViewSet):
 class AssignmentViewSet(viewsets.ModelViewSet):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """Filter assignments based on user role"""
+        user = self.request.user
+        
+        if user.role == 'ADMIN':
+            return Assignment.objects.all()
+        elif user.role in ['MANAGER', 'TL', 'SRMGR']:
+            # Managers see assignments for their team members
+            if user.team:
+                return Assignment.objects.filter(
+                    models.Q(user__team=user.team) | models.Q(user=user)
+                )
+            return Assignment.objects.filter(user=user)
+        else:
+            # Employees see only their own assignments
+            return Assignment.objects.filter(user=user)
+    
+    def create(self, request, *args, **kwargs):
+        """Create or update an assignment (upsert)"""
+        course_id = request.data.get('course_id')
+        user_id = request.data.get('user_id')
+        
+        if not course_id:
+            return Response(
+                {'error': 'course_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # If user_id not provided, assign to self (employee starting a course)
+        if not user_id:
+            user_id = request.user.id
+        
+        # Check permissions for assigning to others
+        if user_id != request.user.id:
+            if request.user.role not in ['ADMIN', 'MANAGER', 'TL', 'SRMGR']:
+                return Response(
+                    {'error': 'You do not have permission to assign courses to others'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        
+        try:
+            course = Course.objects.get(id=course_id)
+            user = User.objects.get(id=user_id)
+        except Course.DoesNotExist:
+            return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Upsert: get or create
+        assignment, created = Assignment.objects.get_or_create(
+            user=user,
+            course=course,
+            defaults={
+                'assigned_by': request.user,
+                'status': 'not_started',
+                'progress_pct': 0
+            }
+        )
+        
+        if not created:
+            # Update assigned_by if reassigning
+            assignment.assigned_by = request.user
+            assignment.save(update_fields=['assigned_by'])
+        
+        serializer = self.get_serializer(assignment)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def mine(self, request):
+        """Get employee's own assignments with nested course data"""
+        assignments = Assignment.objects.filter(user=request.user).select_related('course', 'assigned_by')
+        serializer = self.get_serializer(assignments, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[IsManagerOrAdmin])
+    def team(self, request):
+        """Get assignments for manager's team members"""
+        user = request.user
+        
+        if user.role == 'ADMIN':
+            assignments = Assignment.objects.all()
+        elif user.team:
+            assignments = Assignment.objects.filter(user__team=user.team)
+        else:
+            assignments = Assignment.objects.none()
+        
+        assignments = assignments.select_related('user', 'course', 'assigned_by')
+        serializer = self.get_serializer(assignments, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['patch'])
+    def progress(self, request, pk=None):
+        """Update assignment progress and create progress event"""
+        assignment = self.get_object()
+        
+        # Check permission: only the assigned user or managers/admins can update
+        if assignment.user != request.user and request.user.role not in ['ADMIN', 'MANAGER', 'TL', 'SRMGR']:
+            return Response(
+                {'error': 'You do not have permission to update this assignment'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        progress_pct = request.data.get('progress_pct')
+        new_status = request.data.get('status')
+        
+        if progress_pct is not None:
+            try:
+                progress_pct = int(progress_pct)
+                if progress_pct < 0 or progress_pct > 100:
+                    raise ValueError()
+            except (ValueError, TypeError):
+                return Response(
+                    {'error': 'progress_pct must be an integer between 0 and 100'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            assignment.progress_pct = progress_pct
+            assignment.last_activity_at = timezone.now()
+            
+            # Auto-complete at 100%
+            if progress_pct >= 100:
+                assignment.status = 'completed'
+                if not assignment.completed_at:
+                    assignment.completed_at = timezone.now()
+            elif progress_pct > 0 and assignment.status == 'not_started':
+                assignment.status = 'in_progress'
+            
+            # Create progress event
+            ProgressEvent.objects.create(
+                assignment=assignment,
+                progress_pct=progress_pct
+            )
+        
+        if new_status and new_status in ['not_started', 'in_progress', 'completed']:
+            assignment.status = new_status
+            if new_status == 'completed' and not assignment.completed_at:
+                assignment.completed_at = timezone.now()
+        
+        assignment.save()
+        
+        serializer = self.get_serializer(assignment)
+        return Response(serializer.data)
 
 
 class ProgressEventViewSet(viewsets.ModelViewSet):
