@@ -1,0 +1,60 @@
+Replace the Employees page’s mock data with real data from the backend and display only each person’s name, designation, and email. Keep all routing, components, and modals intact; do not change login, tokens, or other pages.
+
+Backend
+
+Add a read-only endpoint GET /api/v1/employees/ that returns an array of:
+
+[{ "id": 1, "name": "Ali Hassan", "email": "ali@taleemabad.com", "designation": "Content Developer" }]
+
+
+– If User doesn’t have a designation field, add job_title = models.CharField(max_length=120, blank=True) and expose it as designation in the serializer; for name, return get_full_name() (fallback to email local-part).
+– Permission: MANAGER and ADMIN only (EMPLOYEE should get 403).
+– Add optional ?q= search (matches name or email).
+– Update seed_demo to set titles for demo users (e.g., “Content Developer”, “UI/UX Designer”).
+– Wire the route in DRF as /api/v1/employees/ (don’t break existing /users/ if present).
+– CORS/hosts remain from env; authentication via Authorization: Bearer <access>.
+
+Frontend
+2) Create src/api/employees.ts:
+
+export type Employee = { id:number; name:string; email:string; designation:string };
+
+export async function fetchEmployees(token:string, q?:string): Promise<Employee[]> using VITE_API_BASE_URL.
+
+Update the Employees page (e.g., src/pages/EmployeesPage.tsx):
+
+Remove all imports/usages of mock employees and progress/assignment counts.
+
+On mount, call fetchEmployees(accessToken, q); keep a controlled search input that refetches on change (debounce 250ms).
+
+Render simple cards showing:
+
+Avatar initials
+
+Name (bold)
+
+Designation (secondary line)
+
+Email (small text)
+
+Delete/Hide the badges (“assigned / in progress / completed”) and any mock counters.
+
+Keep the “Invite Employee” button and modal UI, but no backend send is required yet (no-op).
+
+UX details:
+
+Loading state: skeleton cards (6 placeholders).
+
+Empty state: “No employees found.”
+
+Errors: small inline alert with retry.
+
+Do not add or change any ports in code; read VITE_API_BASE_URL from env; attach the Bearer token from the existing auth store.
+
+Verification:
+
+After sign-in as MANAGER or ADMIN, the Employees page calls GET /api/v1/employees/ once and renders only name/designation/email from the database.
+
+EMPLOYEE role navigating to /employees receives 403 and should see the existing protected-route behavior.
+
+Finally, commit the changes and list modified files.

@@ -20,5 +20,6 @@ urlpatterns = [
     path('auth/password-reset/request', views.request_password_reset, name='request_password_reset'),
     path('auth/password-reset/confirm', views.reset_password, name='reset_password'),
     path('health/db', views.health_db, name='health_db'),
+    path('employees/', views.employees_list, name='employees_list'),
     path('', include(router.urls)),
 ]

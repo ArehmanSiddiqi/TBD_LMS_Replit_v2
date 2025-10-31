@@ -10,7 +10,8 @@ import secrets
 from .models import User, Team, Course, Resource, Assignment, ProgressEvent, Notification, Approval, PasswordResetToken
 from .serializers import (
     UserSerializer, TeamSerializer, CourseSerializer, ResourceSerializer,
-    AssignmentSerializer, ProgressEventSerializer, NotificationSerializer, ApprovalSerializer
+    AssignmentSerializer, ProgressEventSerializer, NotificationSerializer, ApprovalSerializer,
+    EmployeeSerializer
 )
 from .jwt_utils import create_access_token, create_refresh_token, decode_refresh_token, blacklist_refresh_token
 from .permissions import IsAdmin, IsManagerOrAdmin
@@ -257,6 +258,30 @@ def health_db(request):
             'database': 'disconnected',
             'error': str(e)
         }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+@api_view(['GET'])
+@permission_classes([IsManagerOrAdmin])
+def employees_list(request):
+    """
+    List all employees with optional search.
+    Only accessible by MANAGER and ADMIN roles.
+    Query params:
+    - q: search by name or email
+    """
+    queryset = User.objects.all().order_by('first_name', 'last_name', 'email')
+    
+    search_query = request.query_params.get('q', '').strip()
+    if search_query:
+        from django.db.models import Q
+        queryset = queryset.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+    
+    serializer = EmployeeSerializer(queryset, many=True)
+    return Response(serializer.data)
 
 
 class UserViewSet(viewsets.ModelViewSet):

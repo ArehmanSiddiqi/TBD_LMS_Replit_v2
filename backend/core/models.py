@@ -32,6 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, max_length=255)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
+    job_title = models.CharField(max_length=120, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='EMPLOYEE')
     team = models.ForeignKey('Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='members')
     
@@ -50,6 +51,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+    def get_full_name(self):
+        """Return full name or email local part if name is empty"""
+        full_name = f"{self.first_name} {self.last_name}".strip()
+        if full_name:
+            return full_name
+        return self.email.split('@')[0]
 
     @property
     def full_name(self):

@@ -30,6 +30,7 @@ class Command(BaseCommand):
             password='admin123',
             first_name='Admin',
             last_name='User',
+            job_title='Platform Administrator',
             role='ADMIN',
             team=admin_team
         )
@@ -42,6 +43,7 @@ class Command(BaseCommand):
             password='manager123',
             first_name='Sarah',
             last_name='Johnson',
+            job_title='Engineering Manager',
             role='MANAGER',
             team=engineering_team
         )
@@ -55,6 +57,7 @@ class Command(BaseCommand):
             password='employee123',
             first_name='John',
             last_name='Doe',
+            job_title='Content Developer',
             role='EMPLOYEE',
             team=engineering_team
         )
@@ -65,6 +68,7 @@ class Command(BaseCommand):
             password='password123',
             first_name='Jane',
             last_name='Smith',
+            job_title='UI/UX Designer',
             role='EMPLOYEE',
             team=engineering_team
         )
@@ -74,6 +78,7 @@ class Command(BaseCommand):
             password='password123',
             first_name='Mike',
             last_name='Wilson',
+            job_title='Sales Representative',
             role='EMPLOYEE',
             team=sales_team
         )
