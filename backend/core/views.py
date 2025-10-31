@@ -382,6 +382,16 @@ class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
     
+    def get_permissions(self):
+        """
+        Admin-only for update/delete operations.
+        Create requires authentication (handled in create method).
+        List/retrieve open to authenticated users.
+        """
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsAdmin()]
+        return [IsAuthenticated()]
+    
     def get_queryset(self):
         """Role-aware course filtering"""
         user = self.request.user
