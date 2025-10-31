@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { User, CourseStatus } from '../types';
-import { mockCourses } from '../mocks/courses';
+import type { User } from '../types';
+import { coursesService, type Course } from '../services/courses';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -14,17 +14,37 @@ export const ManagerCoursesPage: React.FC<ManagerCoursesPageProps> = ({ currentU
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const filteredCourses = mockCourses.filter(course => {
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await coursesService.getAll();
+      setCourses(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load courses');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesFilter = statusFilter === 'all' || course.courseStatus === statusFilter;
+    const matchesFilter = statusFilter === 'all' || course.status === statusFilter;
     
     return matchesSearch && matchesFilter;
   });
 
-  const getStatusBadge = (status: CourseStatus | undefined) => {
+  const getStatusBadge = (status: string | undefined) => {
     switch (status) {
       case 'published':
         return <span className="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded">Published</span>;
@@ -83,44 +103,57 @@ export const ManagerCoursesPage: React.FC<ManagerCoursesPageProps> = ({ currentU
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => {
-            const isDraft = course.courseStatus === 'draft';
-            const isPublished = course.courseStatus === 'published';
-            const isAwaitingApproval = course.courseStatus === 'awaiting_approval';
+        {loading && (
+          <div className="text-center py-12">
+            <p className="text-gray-600">Loading courses...</p>
+          </div>
+        )}
 
-            return (
-              <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <img
-                  src={course.thumbnailUrl}
-                  alt={course.title}
-                  className="w-full h-48 object-cover"
-                />
-                
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl font-bold text-gray-900 flex-1">
-                      {course.title}
-                    </h3>
-                    {getStatusBadge(course.courseStatus)}
-                  </div>
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-600">{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCourses.map((course) => {
+              const isDraft = course.status === 'draft';
+              const isPublished = course.status === 'published';
+              const isAwaitingApproval = course.status === 'awaiting_approval';
+
+              return (
+                <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <img
+                    src={course.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'}
+                    alt={course.title}
+                    className="w-full h-48 object-cover"
+                  />
                   
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{course.description}</p>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Creator</span>
-                      <span className="font-medium text-gray-900">{course.createdBy}</span>
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className="text-xl font-bold text-gray-900 flex-1">
+                        {course.title}
+                      </h3>
+                      {getStatusBadge(course.status)}
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Level</span>
-                      <span className="font-medium text-gray-900">{course.level || 'Beginner'}</span>
+                    
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{course.description}</p>
+                    
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Creator</span>
+                        <span className="font-medium text-gray-900">{course.created_by_name}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Level</span>
+                        <span className="font-medium text-gray-900 capitalize">{course.level || 'Beginner'}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Duration</span>
+                        <span className="font-medium text-gray-900">{course.duration || 'Self-paced'}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Duration</span>
-                      <span className="font-medium text-gray-900">{course.duration}</span>
-                    </div>
-                  </div>
 
                   <div className="space-y-2">
                     <div className="flex gap-2">
@@ -183,10 +216,11 @@ export const ManagerCoursesPage: React.FC<ManagerCoursesPageProps> = ({ currentU
           })}
         </div>
 
-        {filteredCourses.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-600">No courses found matching your criteria.</p>
-          </div>
+          {filteredCourses.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No courses found matching your criteria.</p>
+            </div>
+          )}
         )}
       </div>
     </div>
