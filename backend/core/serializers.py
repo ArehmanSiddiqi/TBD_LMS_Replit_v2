@@ -14,11 +14,13 @@ class UserSerializer(serializers.ModelSerializer):
 class EmployeeSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     designation = serializers.CharField(source='job_title', read_only=True)
+    firstName = serializers.CharField(source='first_name', read_only=True)
+    lastName = serializers.CharField(source='last_name', read_only=True)
     
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', 'designation']
-        read_only_fields = ['id', 'name', 'email', 'designation']
+        fields = ['id', 'name', 'email', 'designation', 'firstName', 'lastName', 'role']
+        read_only_fields = ['id', 'name', 'email', 'designation', 'firstName', 'lastName']
     
     def get_name(self, obj):
         return obj.get_full_name()

@@ -284,6 +284,87 @@ def employees_list(request):
     return Response(serializer.data)
 
 
+@api_view(['PATCH'])
+@permission_classes([IsAdmin])
+def employee_update(request, user_id):
+    """
+    Update employee details including role.
+    Only accessible by ADMIN role.
+    """
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    first_name = request.data.get('firstName')
+    last_name = request.data.get('lastName')
+    job_title = request.data.get('jobTitle')
+    role = request.data.get('role')
+    
+    if first_name is not None:
+        first_name = first_name.strip()
+        if not first_name:
+            return Response(
+                {'error': 'First name cannot be empty'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user.first_name = first_name
+        
+    if last_name is not None:
+        last_name = last_name.strip()
+        if not last_name:
+            return Response(
+                {'error': 'Last name cannot be empty'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user.last_name = last_name
+        
+    if job_title is not None:
+        user.job_title = job_title.strip()
+        
+    if role is not None:
+        VALID_ROLES = ['ADMIN', 'MANAGER', 'TL', 'SRMGR', 'EMPLOYEE']
+        if role not in VALID_ROLES:
+            return Response(
+                {'error': f'Invalid role. Must be one of: {", ".join(VALID_ROLES)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user.role = role
+    
+    user.save()
+    
+    serializer = EmployeeSerializer(user)
+    return Response(serializer.data)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdmin])
+def employee_delete(request, user_id):
+    """
+    Delete an employee.
+    Only accessible by ADMIN role.
+    """
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    if user.id == request.user.id:
+        return Response(
+            {'error': 'Cannot delete yourself'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    user.delete()
+    return Response({'message': 'User deleted successfully'})
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer

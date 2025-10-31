@@ -21,5 +21,7 @@ urlpatterns = [
     path('auth/password-reset/confirm', views.reset_password, name='reset_password'),
     path('health/db', views.health_db, name='health_db'),
     path('employees/', views.employees_list, name='employees_list'),
+    path('employees/<int:user_id>/', views.employee_update, name='employee_update'),
+    path('employees/<int:user_id>/delete/', views.employee_delete, name='employee_delete'),
     path('', include(router.urls)),
 ]
