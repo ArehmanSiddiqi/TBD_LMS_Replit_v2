@@ -3,6 +3,16 @@
 ## Overview
 This is a Learning Management System (LMS) web application built with React, TypeScript, and a Django REST Framework backend. The platform provides role-based access control (Admin, Manager, Employee) for course management, progress tracking, and team oversight. It's a full-stack application designed to be scalable and maintainable, leveraging a Supabase PostgreSQL database and JWT authentication.
 
+## Recent Changes (Nov 02, 2025)
+- **Deployment Configuration - Single Unified Deployment**: Configured Django to serve both API and React frontend on same domain
+  - **API Centralization**: All frontend API calls centralized through `frontend/src/services/api.ts` with `VITE_API_BASE_URL` environment variable support
+  - **Frontend Build**: Vite builds with `base: '/static/frontend/'` to `backend/static/frontend/`, assets referenced as `/static/frontend/assets/...`
+  - **Static File Serving**: WhiteNoise middleware serves static files in production with compression (`CompressedManifestStaticFilesStorage`)
+  - **URL Routing**: Fixed order: Admin → API → Static files → React catch-all (ensures static files served before catch-all)
+  - **Production Server**: Gunicorn binds to `$PORT`, serves both API and frontend with WhiteNoise
+  - **Deployment Target**: Autoscale on Replit with build process: `npm install && npm run build && collectstatic && gunicorn`
+  - **Documentation**: Created comprehensive `DEPLOYMENT.md` with development and production setup instructions
+
 ## Recent Changes (Oct 31, 2025)
 - **Complete Assignment & Progress Tracking System**: Implemented end-to-end course assignment and automatic progress tracking
   - **Backend**:
