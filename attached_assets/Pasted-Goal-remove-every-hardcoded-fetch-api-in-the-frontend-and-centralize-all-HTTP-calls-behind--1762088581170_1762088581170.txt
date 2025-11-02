@@ -1,0 +1,57 @@
+Goal: remove every hardcoded fetch('/api/...') in the frontend and centralize all HTTP calls behind a single BASE_URL read from VITE_API_BASE_URL. Keep behavior identical and do not change any backend paths or logic.
+
+Constraints: Frontend is React + Vite + TypeScript + Tailwind. Use only the env var name VITE_API_BASE_URL. No scope creep—only the BASE_URL refactor. Do not modify backend code unless a build error forces a trivial import path fix.
+
+Implement:
+
+Create frontend/src/lib/api.ts that exports:
+
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL || ""
+
+const BASE_URL = RAW_BASE with trailing slashes removed
+
+function joinUrl(path: string): if path starts with http(s) leave as-is; otherwise ensure leading slash and prefix with BASE_URL
+
+export async function apiFetch(path: string, init?: RequestInit): build url via joinUrl; ensure Content-Type: application/json when a body exists and header missing; perform fetch; if res.ok is false, read response text and throw Error including status code and text; if content-type includes application/json return res.json() else return res.text()
+
+export { BASE_URL }
+
+In the entire frontend/src/** codebase, replace every occurrence of fetch('/api...'), fetch("/api..."), and fetch(/api...) with apiFetch('/api...'), apiFetch("/api..."), or apiFetch(/api...) respectively. Also convert any relative API calls like fetch('api/v1/...') to apiFetch('/api/v1/...'). Preserve existing options (method, headers, body) and existing response handling logic. Add the import “import { apiFetch } from '@/lib/api'” (or correct relative path) at the top of each changed file, avoiding duplicate imports.
+
+Ensure frontend/.env.example contains: VITE_API_BASE_URL=http://127.0.0.1:8000
+ (comment line may note production example like https://your-backend.onrender.com
+). Ensure frontend/src/env.d.ts declares the Vite env types for VITE_API_BASE_URL and VITE_POSTHOG_KEY if not already present.
+
+Add a quick post-change check: fail CI or surface a warning if any fetch('/api or fetch("/api remain. You can use a grep in the project runner or keep it as a manual check; just ensure no instances remain.
+
+Do not introduce any new env var names. Do not change request routes (keep /api/v1/...).
+
+Acceptance criteria:
+
+All frontend API calls go through apiFetch and none call fetch('/api...') directly.
+
+frontend/src/lib/api.ts exists and exports apiFetch and BASE_URL.
+
+npm run dev works with VITE_API_BASE_URL=http://127.0.0.1:8000
+ and the app can login and load data.
+
+npm run build succeeds with no TypeScript errors.
+
+Grep over frontend/src shows zero matches for fetch('/api or fetch("/api.
+
+Deliverables:
+
+Commit with message: feat(frontend): centralize API base via VITE_API_BASE_URL and apiFetch helper; remove hardcoded '/api' fetches
+
+Brief summary of files changed and how you tested.
+
+Quick test steps after changes:
+
+Set VITE_API_BASE_URL to your backend (local: http://127.0.0.1:8000
+; Render: https://<your-app>.onrender.com).
+
+Start backend, then cd frontend && npm run dev, verify login and courses load.
+
+Run npm run build and ensure success.
+
+Begin now and report back with a concise diff summary.
