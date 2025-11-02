@@ -11,9 +11,9 @@ packages = ["postgresql"]
 language = "nodejs"
 
 [deployment]
-deploymentTarget = "cloudrun"
-build = ["sh", "-c", "npm run build   "]
-run = ["sh", "-c", "vite --host --port 5000"]
+deploymentTarget = "autoscale"
+build = ["sh", "-c", "cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt && python manage.py collectstatic --noinput"]
+run = ["sh", "-c", "cd backend && gunicorn --bind 0.0.0.0:$PORT --workers 4 --timeout 120 config.wsgi:application"]
 
 [[ports]]
 localPort = 5000
