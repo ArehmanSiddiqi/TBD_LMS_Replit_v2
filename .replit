@@ -11,9 +11,9 @@ packages = ["postgresql"]
 language = "nodejs"
 
 [deployment]
-deploymentTarget = "static"
-build = ["npm", "run", "build"]
-publicDir = "dist"
+deploymentTarget = "cloudrun"
+build = ["sh", "-c", "npm run build   "]
+run = ["sh", "-c", "vite --host --port 5000"]
 
 [[ports]]
 localPort = 5000
@@ -29,6 +29,14 @@ externalPort = 8000
 [[ports]]
 localPort = 37145
 externalPort = 80
+
+[[ports]]
+localPort = 39379
+externalPort = 3000
+
+[[ports]]
+localPort = 44209
+externalPort = 3001
 
 [agent]
 expertMode = true
