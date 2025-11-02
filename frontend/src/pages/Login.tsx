@@ -33,28 +33,11 @@ export const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
-        localStorage.setItem('user', JSON.stringify(data.user));
-
-        const redirectPath = authService.getRedirectPath(data.user.role);
-        navigate(redirectPath);
-      } else {
-        setError(data.error || 'Invalid email or password');
-      }
+      const data = await authService.login(email, password);
+      const redirectPath = authService.getRedirectPath(data.user.role);
+      navigate(redirectPath);
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err instanceof Error ? err.message : 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -82,33 +65,17 @@ export const Login: React.FC = () => {
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
       
-      const response = await fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: registerData.email,
-          password: registerData.password,
-          firstName,
-          lastName
-        })
+      const data = await authService.register({
+        email: registerData.email,
+        password: registerData.password,
+        firstName,
+        lastName
       });
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        const redirectPath = authService.getRedirectPath(data.user.role);
-        navigate(redirectPath);
-      } else {
-        setError(data.error || 'Registration failed');
-      }
+      const redirectPath = authService.getRedirectPath(data.user.role);
+      navigate(redirectPath);
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -121,24 +88,11 @@ export const Login: React.FC = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('/api/v1/auth/password-reset/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email: resetEmail })
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        setSuccess('If an account exists with this email, you will receive password reset instructions.');
-        setResetEmail('');
-      } else {
-        setError(data.error || 'Failed to send reset link');
-      }
+      await authService.passwordResetRequest(resetEmail);
+      setSuccess('If an account exists with this email, you will receive password reset instructions.');
+      setResetEmail('');
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to send reset link');
     } finally {
       setLoading(false);
     }

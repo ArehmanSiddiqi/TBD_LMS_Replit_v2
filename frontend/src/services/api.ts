@@ -1,4 +1,8 @@
-const API_BASE_URL = '/api/v1';
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const BASE_URL = RAW_BASE.replace(/\/+$/, '');
+const API_BASE_URL = BASE_URL ? `${BASE_URL}/api/v1` : '/api/v1';
+
+export { BASE_URL };
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;

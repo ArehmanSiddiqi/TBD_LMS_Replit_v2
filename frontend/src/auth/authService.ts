@@ -1,45 +1,50 @@
 import type { User, UserRole } from '../types';
+import { api } from '../services/api';
 
 interface Credentials {
   email: string;
   password: string;
 }
 
-const PRESET_USERS: Record<string, { password: string; role: UserRole; name: string }> = {
-  'admin@example.com': {
-    password: 'demo123',
-    role: 'ADMIN',
-    name: 'Admin User',
-  },
-  'manager@example.com': {
-    password: 'demo123',
-    role: 'MANAGER',
-    name: 'Manager User',
-  },
-  'employee@example.com': {
-    password: 'demo123',
-    role: 'EMPLOYEE',
-    name: 'Employee User',
-  },
-};
+interface LoginResponse {
+  access: string;
+  refresh: string;
+  user: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: UserRole;
+    jobTitle: string;
+  };
+}
+
+interface RegisterData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
 
 export const authService = {
-  login: (credentials: Credentials): User | null => {
-    const userConfig = PRESET_USERS[credentials.email];
-    
-    if (userConfig && userConfig.password === credentials.password) {
-      const user: User = {
-        email: credentials.email,
-        role: userConfig.role,
-        name: userConfig.name,
-      };
-      
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      return user;
-    }
-    
-    return null;
+  login: async (email: string, password: string): Promise<LoginResponse> => {
+    const data = await api.post<LoginResponse>('/auth/login', { email, password }, { requiresAuth: false });
+    localStorage.setItem('access_token', data.access);
+    localStorage.setItem('refresh_token', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    return data;
+  },
+
+  register: async (registerData: RegisterData): Promise<LoginResponse> => {
+    const data = await api.post<LoginResponse>('/auth/register', registerData, { requiresAuth: false });
+    localStorage.setItem('access_token', data.access);
+    localStorage.setItem('refresh_token', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    return data;
+  },
+
+  passwordResetRequest: async (email: string): Promise<{ message: string }> => {
+    return api.post<{ message: string }>('/auth/password-reset/request', { email }, { requiresAuth: false });
   },
 
   logout: (): void => {
