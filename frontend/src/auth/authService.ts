@@ -1,11 +1,6 @@
 import type { User, UserRole } from '../types';
 import { api } from '../services/api';
 
-interface Credentials {
-  email: string;
-  password: string;
-}
-
 interface LoginResponse {
   access: string;
   refresh: string;

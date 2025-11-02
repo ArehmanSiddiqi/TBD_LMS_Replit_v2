@@ -23,10 +23,13 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('core.urls')),
-    # Catch-all pattern for React Router - must be last
-    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
 ]
 
 # Serve static files in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Catch-all pattern for React Router - MUST be after static files
+urlpatterns += [
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
+]
