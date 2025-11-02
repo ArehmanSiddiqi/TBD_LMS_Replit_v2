@@ -45,7 +45,8 @@ export const CreateNewCourse: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = authService.getCurrentUser();
   const isAdmin = currentUser?.role === 'ADMIN';
-  const isManager = currentUser?.role === 'MANAGER' || currentUser?.role === 'TL' || currentUser?.role === 'SRMGR';
+  // Project defines roles as 'ADMIN' | 'MANAGER' | 'EMPLOYEE'
+  const isManager = currentUser?.role === 'MANAGER';
   
   const [formData, setFormData] = useState({
     title: '',

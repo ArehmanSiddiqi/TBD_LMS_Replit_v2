@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { authService } from '../auth/authService';
 import { coursesService, type Course } from '../services/courses';
 import { assignmentsService, type Assignment } from '../services/assignments';
@@ -18,7 +18,6 @@ declare global {
 
 export const CourseView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const currentUser = authService.getCurrentUser();
   const [course, setCourse] = useState<Course | null>(null);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
@@ -28,7 +27,8 @@ export const CourseView: React.FC = () => {
   const [isStarting, setIsStarting] = useState(false);
   
   const playerRef = useRef<any>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // In browser environment setInterval returns a number
+  const progressIntervalRef = useRef<number | null>(null);
   const lastReportedProgressRef = useRef(0);
 
   const getYouTubeVideoId = (url: string): string | null => {

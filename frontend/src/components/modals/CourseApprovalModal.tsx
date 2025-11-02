@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import type { CourseWithStatus } from '../../mocks/adminData';
+import type { Course } from '../../services/courses';
 
 interface CourseApprovalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  course: CourseWithStatus;
+  // Accept either the mocked CourseWithStatus shape or the API Course shape.
+  // We use a subset of fields below and map snake_case -> camelCase where needed.
+  course: Course | (Partial<Record<string, any>> & { title?: string; description?: string; managerNote?: string });
   onApprove: () => void;
   onReject: (note: string) => void;
 }
@@ -61,19 +63,19 @@ export const CourseApprovalModal: React.FC<CourseApprovalModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-sm font-medium text-gray-600 mb-1">Created By</div>
-              <div className="text-gray-900">{course.creatorName}</div>
+              <div className="text-gray-900">{(course as any).creatorName || (course as any).created_by_name || 'Unknown'}</div>
             </div>
             <div>
               <div className="text-sm font-medium text-gray-600 mb-1">Level</div>
-              <div className="text-gray-900">{course.level}</div>
+              <div className="text-gray-900">{(course as any).level || (course as any).level}</div>
             </div>
           </div>
 
-          {course.managerNote && (
+          {(course as any).managerNote && (
             <div>
               <div className="text-sm font-medium text-gray-600 mb-1">Manager's Note</div>
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-gray-700">
-                {course.managerNote}
+                {(course as any).managerNote}
               </div>
             </div>
           )}

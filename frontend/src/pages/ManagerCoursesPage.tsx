@@ -59,11 +59,11 @@ export const ManagerCoursesPage: React.FC<ManagerCoursesPageProps> = ({ currentU
     }
   };
 
-  const handleAssign = (courseId: string) => {
+  const handleAssign = (courseId: number) => {
     console.log('Assign course:', courseId);
   };
 
-  const handleEdit = (courseId: string) => {
+  const handleEdit = (courseId: number) => {
     console.log('Edit course:', courseId);
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../auth/authService';
 import { usersService, type User } from '../services/users';
-import { assignmentsService, type Assignment } from '../services/assignments';
+import { assignmentsService } from '../services/assignments';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';

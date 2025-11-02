@@ -65,7 +65,8 @@ export const AdminCoursesPage: React.FC = () => {
   const handleReject = async (note: string) => {
     if (selectedCourse) {
       try {
-        await coursesService.update(selectedCourse.id, { status: 'needs_revision' });
+        // Use the dedicated reject endpoint so manager notes are preserved
+        await coursesService.reject(selectedCourse.id, note);
         await loadCourses();
         setApprovalModalOpen(false);
         setSelectedCourse(null);
