@@ -6,6 +6,13 @@ import { Input } from '../components/ui/Input';
 import { FormField } from '../components/ui/FormField';
 import { Card } from '../components/ui/Card';
 
+
+const ALLOWED_EMAIL_DOMAINS = ['taleemabad.com', 'niete.edu.pk']; // change if needed
+const isAllowedEmail = (email: string) => {
+  const match = email.trim().toLowerCase().match(/@([a-z0-9.-]+\.[a-z]{2,})$/i);
+  return !!(match && ALLOWED_EMAIL_DOMAINS.includes(match[1]));
+};
+
 type AuthTab = 'login' | 'register' | 'reset';
 
 export const Login: React.FC = () => {
@@ -55,6 +62,11 @@ export const Login: React.FC = () => {
     
     if (registerData.password.length < 8) {
       setError('Password must be at least 8 characters long');
+      return;
+    }
+    
+    if (!isAllowedEmail(registerData.email)) {
+      setError('Please use your Taleemabad or Niete email (…@taleemabad.com or …@niete.edu.pk).');
       return;
     }
     
